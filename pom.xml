@@ -14,16 +14,18 @@
     </properties>
 
     <build>
-        <finalName>Client</finalName>
-        <!--        <finalName>Server</finalName>-->
+<!--        <finalName>Client</finalName>-->
+<!--        <finalName>Server</finalName>-->
+        <finalName>Main</finalName>
         <plugins>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>ClientMain</mainClass>
-                            <!--                            <mainClass>ServerMain</mainClass>-->
+<!--                            <mainClass>ClientMain</mainClass>-->
+<!--                            <mainClass>ServerMain</mainClass>-->
+                            <mainClass>Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
