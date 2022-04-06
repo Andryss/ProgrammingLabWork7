@@ -30,21 +30,24 @@ public class ClientManager {
     }
 
     private static void connectionStep(int port) throws IOException, ClassNotFoundException {
-        InetAddress serverAddress = readServerAddress();
-        ClientController.println("Connecting to server \"" + serverAddress + "\"");
-        try {
-            ClientConnector.initialize(serverAddress, port);
-        } catch (SocketTimeoutException e) {
-            throw new IOException("Server is not responding, try later or choose another server :(");
+        while (true) {
+            try {
+                InetAddress serverAddress = readServerAddress();
+                ClientController.println("Connecting to server \"" + serverAddress + "\"");
+                ClientConnector.initialize(serverAddress, port);
+                ClientController.println("Connection to server was successful");
+                break;
+            } catch (SocketTimeoutException e) {
+                ClientController.printlnErr(e.getMessage());
+            }
         }
-        ClientController.println("Connection to server was successful");
     }
 
     private static InetAddress readServerAddress() {
         ClientController.print("Enter server domain name or IP (or \"exit\"): ");
         while (true) {
             String line = ClientController.readLine().trim();
-            if (line.equals("exit")) {
+            if ("exit".equals(line)) {
                 System.exit(0);
             }
             try {
@@ -57,7 +60,7 @@ public class ClientManager {
     }
 
     private static void loginRegisterStep() {
-        label:
+        loginRegisterStep:
         while (true) {
             ClientController.print("Do you want (\"l[ogin]\" or \"r[egister]\"): ");
             String line = ClientController.readLine().trim();
@@ -68,14 +71,14 @@ public class ClientManager {
                 case "l":
                     if (loginStep()) {
                         ClientController.println("User successfully logged in");
-                        break label;
+                        break loginRegisterStep;
                     }
                     break;
                 case "register":
                 case "r":
                     if (registerStep()) {
                         ClientController.println("New user successfully registered");
-                        break label;
+                        break loginRegisterStep;
                     }
                     break;
                 default:

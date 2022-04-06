@@ -86,7 +86,7 @@ public class ClientConnector {
         try {
             socket.receive(packetWithData);
         } catch (SocketTimeoutException e) {
-            throw new SocketTimeoutException("Time to execute command run out. Server connection lost");
+            throw new SocketTimeoutException("Server is not responding, try later or choose another server :(");
         }
     }
 }

@@ -21,6 +21,9 @@ public class Response implements Serializable {
         }
     }
 
+    void setResponseType(ResponseType responseType) {
+        this.responseType = responseType;
+    }
     public ResponseType getResponseType() {
         return responseType;
     }

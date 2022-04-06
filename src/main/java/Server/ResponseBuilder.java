@@ -23,6 +23,10 @@ public class ResponseBuilder {
         return this;
     }
 
+    void setResponseType(Response.ResponseType responseType) {
+        response.setResponseType(responseType);
+    }
+
     Response getResponse() {
         return response;
     }
