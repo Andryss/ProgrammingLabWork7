@@ -35,7 +35,7 @@ public class ServerCollectionManager {
         initializeStatements();
         createTables();
         loadCollectionsFromDB();
-        printTable(usersTable);printTable(movieTable);
+        printTables();
     }
 
     private static Statement statement;
@@ -110,6 +110,15 @@ public class ServerCollectionManager {
                 "screenwriter_birthday TEXT,\n" +
                 "screenwriter_hair_color TEXT\n" +
                 ")", movieTable));
+    }
+
+    static void close() {
+        dropTables();
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            ServerController.error(e.getMessage(), e);
+        }
     }
 
     static void dropTables() {
@@ -297,27 +306,8 @@ public class ServerCollectionManager {
         return (Hashtable<Integer, Movie>) movieCollection.clone();
     }
 
-    static void printTable(String tableName) throws SQLException {
-        try (ResultSet resultSet = statement.executeQuery(String.format("SELECT * from %s", tableName));) {
-            StringBuilder stringBuilder = new StringBuilder();
-            ResultSetMetaData rsmd = resultSet.getMetaData();
-            int columnsNumber = rsmd.getColumnCount();
-            while (resultSet.next()) {
-                for (int i = 1; i <= columnsNumber; i++) {
-                    if (i > 1) stringBuilder.append(",  ");
-                    String columnValue = resultSet.getString(i);
-                    stringBuilder.append(columnValue).append(" ").append(rsmd.getColumnName(i));
-                }
-                stringBuilder.append("\n");
-            }
-            ServerController.info(tableName + " contains:\n" + stringBuilder);
-        }
-    }
-
     static void printTables() throws SQLException {
         ServerController.info(userCollection.toString());
-        printTable(usersTable);
         ServerController.info(movieCollection.toString());
-        printTable(movieTable);
     }
 }

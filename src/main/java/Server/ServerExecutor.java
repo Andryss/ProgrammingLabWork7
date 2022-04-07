@@ -98,14 +98,16 @@ public class ServerExecutor {
 
         Queue<Command> commandQueue = request.getCommandQueue();
         try {
+            responseBuilder.add("\u001B[34m" + "START: command \"" + request.getCommandName() + "\" start executing" + "\u001B[0m");
             if (commandQueue.size() > 1) {
                 validateCommands(commandQueue);
             }
             for (Command command : commandQueue) {
                 command.execute(ExecuteState.EXECUTE, serverINFO);
             }
+            responseBuilder.add("\u001B[32m" + "SUCCESS: command \"" + request.getCommandName() + "\" successfully completed" + "\u001B[0m");
         } catch (CommandException e) {
-            responseBuilder = ResponseBuilder.createNewResponse(Response.ResponseType.LOGIN_FAILED, e.getMessage());
+            responseBuilder = ResponseBuilder.createNewResponse(Response.ResponseType.EXECUTION_FAILED, e.getMessage());
         }
 
         ResponseBuilder finalResponseBuilder = responseBuilder;

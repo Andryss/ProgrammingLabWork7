@@ -19,7 +19,10 @@ public class ServerManager {
     private ServerManager() {}
 
     static {
-        Runtime.getRuntime().addShutdownHook(new Thread(ServerCollectionManager::dropTables, "DropTablesThread"));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                ServerCollectionManager.close();
+                ServerConnector.close();
+        }, "CloseThread"));
     }
 
     public static void run(int port) throws IOException, FieldException, SQLException, ClassNotFoundException {

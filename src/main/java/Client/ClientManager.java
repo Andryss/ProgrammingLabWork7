@@ -35,7 +35,7 @@ public class ClientManager {
                 InetAddress serverAddress = readServerAddress();
                 ClientController.println("Connecting to server \"" + serverAddress + "\"");
                 ClientConnector.initialize(serverAddress, port);
-                ClientController.println("Connection to server was successful");
+                ClientController.printlnGood("Connection to server was successful");
                 break;
             } catch (SocketTimeoutException e) {
                 ClientController.printlnErr(e.getMessage());
@@ -70,14 +70,14 @@ public class ClientManager {
                 case "login":
                 case "l":
                     if (loginStep()) {
-                        ClientController.println("User successfully logged in");
+                        ClientController.printlnGood("User successfully logged in");
                         break loginRegisterStep;
                     }
                     break;
                 case "register":
                 case "r":
                     if (registerStep()) {
-                        ClientController.println("New user successfully registered");
+                        ClientController.printlnGood("New user successfully registered");
                         break loginRegisterStep;
                     }
                     break;
@@ -150,7 +150,20 @@ public class ClientManager {
         while (true) {
             try {
                 ClientExecutor.parseCommand(ClientController.readLine());
-                ClientController.println(ClientConnector.sendToServer(RequestBuilder.getRequest()).getMessage());
+                Response response = ClientConnector.sendToServer(RequestBuilder.getRequest());
+                if (response.getResponseType() == Response.ResponseType.EXECUTION_SUCCESSFUL) {
+                    ClientController.println(response.getMessage());
+                } else if (response.getResponseType() == Response.ResponseType.EXECUTION_FAILED) {
+                    ClientController.printlnErr(response.getMessage());
+                } else {
+                    ClientController.printlnErr("Server has wrong logic: expected \"" +
+                            Response.ResponseType.EXECUTION_FAILED +
+                            "\" or \"" +
+                            Response.ResponseType.EXECUTION_SUCCESSFUL +
+                            "\", but not \"" +
+                            response.getResponseType() +
+                            "\"");
+                }
             } catch (SocketTimeoutException e) {
                 ClientController.printlnErr("Server isn't responding (try again later or choose another server)");
             } catch (IOException | ClassNotFoundException | CommandException e) {

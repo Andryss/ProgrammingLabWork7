@@ -65,7 +65,7 @@ public abstract class ElementCommand extends NameableCommand {
      */
     private static void fillMethodsSetters(Map<String, Method> emptyMethodsSetters, Class<?> cls) {
         for (Method method : cls.getDeclaredMethods()) {
-            if (method.getName().startsWith("set")) {
+            if (method.getName().startsWith("set") && method.getAnnotation(FieldSetter.class) != null) {
                 if (method.getParameters()[0].getType().equals(String.class)) {
                     FieldSetter annotation = method.getAnnotation(FieldSetter.class);
                     String fieldName = cls.getSimpleName() + " " + annotation.fieldName();

@@ -18,7 +18,7 @@ public class ServerController {
     }
 
     public static void error(String message, Throwable error) {
-        logger.error(message,error);
+        logger.error("\u001B[31m" + message + "\u001B[0m",error);
     }
 
 }

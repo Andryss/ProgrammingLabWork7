@@ -39,6 +39,15 @@ public class ServerConnector {
         channel.bind(new InetSocketAddress(port));
     }
 
+    static void close() {
+        try {
+            channel.close();
+            selector.close();
+        } catch (IOException e) {
+            ServerController.error(e.getMessage(), e);
+        }
+    }
+
     public static void run() throws IOException, ClassNotFoundException {
         ServerController.info("------------------------------- Ready for receiving -------------------------------");
 

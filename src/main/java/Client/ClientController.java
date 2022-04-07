@@ -34,6 +34,10 @@ public class ClientController {
         writer.print(line);
     }
 
+    public static void printlnGood(String line) {
+        writer.println("\u001B[32m" + line + "\u001B[0m");
+    }
+
     public static void printlnErr(String line) {
         writer.println("\u001B[31m" + line + "\u001B[0m");
     }
