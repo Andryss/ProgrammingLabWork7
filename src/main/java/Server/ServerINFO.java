@@ -4,13 +4,12 @@ import MovieObjects.Movie;
 
 import java.sql.SQLException;
 import java.util.Hashtable;
-import java.util.Map;
 
 /**
  * Class ServerINFO contains of all the information, that can be useful for commands (collection, name of file etc.)
  */
 public class ServerINFO {
-    private final String userName;
+    protected final String userName;
     private final String userPassword;
     private final ResponseBuilder responseBuilder;
 
@@ -49,6 +48,7 @@ public class ServerINFO {
         return new ServerINFOClone(userName, userPassword, responseBuilder);
     }
 
+
     private static class ServerINFOClone extends ServerINFO {
         private final Hashtable<Integer, Movie> movieCollection = ServerCollectionManager.getMovieCollection();
 
@@ -61,20 +61,32 @@ public class ServerINFO {
             return movieCollection.get(key);
         }
         @Override
-        public Movie putMovie(Integer key, Movie movie) {
+        public Movie putMovie(Integer key, Movie movie) throws SQLException {
+            if (movieCollection.containsKey(key)) {
+                throw new SQLException("Movie already exists");
+            }
+            movie.setOwner(userName);
             return movieCollection.put(key, movie);
         }
         @Override
-        public Movie updateMovie(Integer key, Movie movie) {
+        public Movie updateMovie(Integer key, Movie movie) throws SQLException, IllegalAccessException {
+            if (movieCollection.get(key) != null) {
+                throw new IllegalAccessException("Movie with key \"" + key + "\" doesn't exist");
+            }
+            if (movieCollection.get(key).getOwner().equals(userName)) {
+                throw new IllegalAccessException("User \"" + userName + "\" doesn't have permission to update movie with key \"" + key + "\"");
+            }
             return putMovie(key, movie);
         }
         @Override
-        public Movie removeMovie(Integer key) {
+        public Movie removeMovie(Integer key) throws IllegalAccessException {
+            if (movieCollection.get(key) != null) {
+                throw new IllegalAccessException("Movie with key \"" + key + "\" doesn't exist");
+            }
+            if (movieCollection.get(key).getOwner().equals(userName)) {
+                throw new IllegalAccessException("User \"" + userName + "\" doesn't have permission to remove movie with key \"" + key + "\"");
+            }
             return movieCollection.remove(key);
-        }
-        @Override
-        public Hashtable<Integer, Movie> getMovieCollection() {
-            return movieCollection;
         }
     }
 }

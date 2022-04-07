@@ -25,22 +25,21 @@ public class ClientExecutor {
 
     private static void fillCommandMap() {
         commandMap.put("help", new HelpCommand("help"));
-        //TODO: add all commands to client
-//        commandMap.put("info", new InfoCommand("info"));
-//        commandMap.put("show", new ShowCommand("show"));
-//        commandMap.put("insert", new InsertCommand("insert", ClientController.getReader()));
-//        commandMap.put("update", new UpdateCommand("update", ClientController.getReader()));
-//        commandMap.put("remove_key", new RemoveKeyCommand("remove_key"));
-//        commandMap.put("clear", new ClearCommand("clear"));
+        commandMap.put("info", new InfoCommand("info"));
+        commandMap.put("show", new ShowCommand("show"));
+        commandMap.put("insert", new InsertCommand("insert", ClientController.getReader()));
+        commandMap.put("update", new UpdateCommand("update", ClientController.getReader()));
+        commandMap.put("remove_key", new RemoveKeyCommand("remove_key"));
+        commandMap.put("clear", new ClearCommand("clear"));
         //save --- FORBIDDEN!
-//        commandMap.put("execute_script", new ExecuteScriptCommand("execute_script", null));
-//        commandMap.put("exit", new ExitCommand("exit"));
-//        commandMap.put("history", new HistoryCommand("history", history));
-//        commandMap.put("replace_if_greater", new ReplaceIfGreaterCommand("replace_if_greater", ClientController.getReader()));
-//        commandMap.put("remove_lower_key", new RemoveLowerKeyCommand("remove_key_command"));
-//        commandMap.put("group_counting_by_length", new GroupCountingByLengthCommand("group_counting_by_length"));
-//        commandMap.put("count_less_than_length", new CountLessThenLengthCommand("count_less_than_length"));
-//        commandMap.put("filter_by_mpaa_rating", new FilterByMpaaRatingCommand("filter_by_mpaa_rating"));
+        commandMap.put("execute_script", new ExecuteScriptCommand("execute_script", null));
+        commandMap.put("exit", new ExitCommand("exit"));
+        commandMap.put("history", new HistoryCommand("history", history));
+        commandMap.put("replace_if_greater", new ReplaceIfGreaterCommand("replace_if_greater", ClientController.getReader()));
+        commandMap.put("remove_lower_key", new RemoveLowerKeyCommand("remove_key_command"));
+        commandMap.put("group_counting_by_length", new GroupCountingByLengthCommand("group_counting_by_length"));
+        commandMap.put("count_less_than_length", new CountLessThenLengthCommand("count_less_than_length"));
+        commandMap.put("filter_by_mpaa_rating", new FilterByMpaaRatingCommand("filter_by_mpaa_rating"));
     }
 
     static void parseCommand(String inputLine) throws CommandException {

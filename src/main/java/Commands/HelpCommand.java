@@ -16,26 +16,26 @@ public class HelpCommand extends NameableCommand {
 
     @Override
     public boolean execute(ServerExecutor.ExecuteState state, ServerINFO serverINFO) {
-        setServerINFO(serverINFO);
         if (state == ServerExecutor.ExecuteState.VALIDATE) {
             return true;
         }
-        println("*List of available commands*");
-        println("help : print a list of available commands");
-        println("info : print short info about the collection (type, init date, length etc)");
-        println("show : print all elements in the collection");
-        println("insert null {element} : add new element with given key");
-        println("update null {element} : update an element with given key");
-        println("remove_key null : delete an element with given key");
-        println("clear : clear the collection");
-        println("execute_script file_name : read and execute script from file");
-        println("exit : end the program (without saving)");
-        println("history : print last 13 commands (without arguments)");
-        println("replace_if_greater null {element} : replace an element by key if the new value is greater than the old one");
-        println("remove_lower_key null : remove all elements whose key is less than given");
-        println("group_counting_by_length : group the elements by the value of the \"length\" field, print the number of elements in each group");
-        println("count_less_than_length length : print the number of elements whose \"length\" less than the given");
-        println("filter_by_mpaa_rating mpaaRating : print an elements whose \"mpaaRating\" is equal to the given");
+        serverINFO.getResponseBuilder()
+                .add("*List of available commands*")
+                .add("help : print a list of available commands")
+                .add("info : print short info about the collection (type, init date, length etc)")
+                .add("show : print all elements in the collection")
+                .add("insert null {element} : add new element with given key")
+                .add("update null {element} : update an element with given key")
+                .add("remove_key null : delete an element with given key")
+                .add("clear : clear the collection")
+                .add("execute_script file_name : read and execute script from file")
+                .add("exit : end the program (without saving)")
+                .add("history : print last 13 commands (without arguments)")
+                .add("replace_if_greater null {element} : replace an element by key if the new value is greater than the old one")
+                .add("remove_lower_key null : remove all elements whose key is less than given")
+                .add("group_counting_by_length : group the elements by the value of the \"length\" field, print the number of elements in each group")
+                .add("count_less_than_length length : print the number of elements whose \"length\" less than the given")
+                .add("filter_by_mpaa_rating mpaaRating : print an elements whose \"mpaaRating\" is equal to the given");
         return true;
     }
 

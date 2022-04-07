@@ -10,7 +10,7 @@ import java.util.Scanner;
  */
 public class ClientController {
 
-    private static Scanner reader = new Scanner(System.in);
+    private static final Scanner reader = new Scanner(System.in);
     private static final PrintStream writer = System.out;
 
     private ClientController() {}
@@ -22,17 +22,8 @@ public class ClientController {
         println("I'm waiting for your commands (type \"help\" for list of available commands)." + "\u001B[0m");
     }
 
-    private static void reinitialize() {
-        reader = new Scanner(System.in);
-    }
-
     public static String readLine() {
-        try {
-            return reader.nextLine();
-        } catch (NoSuchElementException e) {
-            reinitialize();
-            throw e;
-        }
+        return reader.nextLine();
     }
 
     public static void println(String line) {
