@@ -89,9 +89,9 @@ public class ClientManager {
     }
 
     private static boolean loginStep() {
-        ClientController.println("Enter user login: ");
+        ClientController.print("Enter user login: ");
         String userLogin = ClientController.readLine().trim();
-        ClientController.println("Enter user password: ");
+        ClientController.print("Enter user password: ");
         String userPassword = ClientController.readLine().trim();
         RequestBuilder.createNewRequest(Request.RequestType.LOGIN_USER, userLogin, userPassword);
         try {
@@ -117,9 +117,9 @@ public class ClientManager {
     }
 
     private static boolean registerStep() {
-        ClientController.println("Enter user login: ");
+        ClientController.print("Enter user login: ");
         String userLogin = ClientController.readLine().trim();
-        ClientController.println("Enter user password: ");
+        ClientController.print("Enter user password: ");
         String userPassword = ClientController.readLine().trim();
         RequestBuilder.createNewRequest(Request.RequestType.REGISTER_USER, userLogin, userPassword);
         try {
@@ -131,9 +131,9 @@ public class ClientManager {
                 return true;
             } else {
                 throw new IOException("Server has wrong logic: expected \"" +
-                        Response.ResponseType.LOGIN_FAILED +
+                        Response.ResponseType.REGISTER_FAILED +
                         "\" or \"" +
-                        Response.ResponseType.LOGIN_SUCCESSFUL +
+                        Response.ResponseType.REGISTER_SUCCESSFUL +
                         "\", but not \"" +
                         response.getResponseType() +
                         "\"");

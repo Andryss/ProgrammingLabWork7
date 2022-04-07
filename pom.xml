@@ -15,8 +15,7 @@
 
     <build>
 <!--        <finalName>Client</finalName>-->
-<!--        <finalName>Server</finalName>-->
-        <finalName>Main</finalName>
+        <finalName>Server</finalName>
         <plugins>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -24,8 +23,7 @@
                     <archive>
                         <manifest>
 <!--                            <mainClass>ClientMain</mainClass>-->
-<!--                            <mainClass>ServerMain</mainClass>-->
-                            <mainClass>Main</mainClass>
+                            <mainClass>ServerMain</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -38,18 +36,6 @@
 
 
     <dependencies>
-
-        <dependency>
-            <groupId>javax.json</groupId>
-            <artifactId>javax.json-api</artifactId>
-            <version>1.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>javax.json</artifactId>
-            <version>1.1</version>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -69,7 +55,6 @@
             <artifactId>postgresql</artifactId>
             <version>42.3.3</version>
         </dependency>
-
 
     </dependencies>
 

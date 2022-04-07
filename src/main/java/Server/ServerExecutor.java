@@ -48,6 +48,12 @@ public class ServerExecutor {
         }
 
         ServerController.info("Request executed");
+
+        try {
+            ServerCollectionManager.printTables();
+        } catch (SQLException e) {
+            ServerController.error(e.getMessage(), e);
+        }
     }
 
     private void checkConnectionRequest() {
@@ -61,8 +67,8 @@ public class ServerExecutor {
     private void loginUserRequest() {
         boolean userPresented = ServerCollectionManager.isUserPresented(request.getUserName(), request.getUserPassword());
         ResponseBuilder responseBuilder = ResponseBuilder.createNewResponse(
-                userPresented ? Response.ResponseType.LOGIN_FAILED : Response.ResponseType.LOGIN_SUCCESSFUL,
-                userPresented ? "Incorrect login or password" : "User successfully logged in"
+                userPresented ? Response.ResponseType.LOGIN_SUCCESSFUL : Response.ResponseType.LOGIN_FAILED,
+                userPresented ? "User successfully logged in" : "Incorrect login or password"
         );
         new Thread(() -> ServerConnector.sendToClient(client, responseBuilder.getResponse()), "SendingLUThread").start();
     }
@@ -72,7 +78,7 @@ public class ServerExecutor {
         try {
             long newUserID = ServerCollectionManager.registerUser(request.getUserName(), request.getUserPassword());
             responseBuilder = ResponseBuilder.createNewResponse(
-                    newUserID == -1 ? Response.ResponseType.LOGIN_FAILED : Response.ResponseType.LOGIN_SUCCESSFUL,
+                    newUserID == -1 ? Response.ResponseType.REGISTER_FAILED : Response.ResponseType.REGISTER_SUCCESSFUL,
                     newUserID == -1 ? "User is already registered" : "New user successfully registered"
             );
         } catch (SQLException throwables) {

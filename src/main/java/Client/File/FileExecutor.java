@@ -27,10 +27,11 @@ public class FileExecutor {
 
     private void fillCommandMap(Scanner reader) {
         commandMap = (HashMap<String, Command>) ClientExecutor.getCommandMap().clone();
-        commandMap.put("insert", new InsertCommand("insert", reader, true));
-        commandMap.put("update", new UpdateCommand("update", reader, true));
-        commandMap.put("execute_script", new ExecuteScriptCommand("execute_script", this));
-        commandMap.put("replace_if_greater", new ReplaceIfGreaterCommand("replace_if_greater", reader, true));
+        //TODO: add all commands in file
+//        commandMap.put("insert", new InsertCommand("insert", reader, true));
+//        commandMap.put("update", new UpdateCommand("update", reader, true));
+//        commandMap.put("execute_script", new ExecuteScriptCommand("execute_script", this));
+//        commandMap.put("replace_if_greater", new ReplaceIfGreaterCommand("replace_if_greater", reader, true));
         commandMap.put("exit", new NameableCommand("exit") {
             @Override
             public boolean execute(ServerExecutor.ExecuteState state, ServerINFO server) throws CommandException {

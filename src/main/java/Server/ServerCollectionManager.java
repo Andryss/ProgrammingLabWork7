@@ -14,6 +14,7 @@ import java.util.Optional;
 
 
 public class ServerCollectionManager {
+    //TODO: all lock to collections
     private static Connection connection;
     private static Hashtable<Integer, Movie> movieCollection;
     private static Hashtable<String, Map.Entry<Long, String>> userCollection;
@@ -31,14 +32,14 @@ public class ServerCollectionManager {
     public static void initialize() throws ClassNotFoundException, SQLException, FieldException {
         Class.forName("org.postgresql.Driver");
         connection = DriverManager.getConnection(String.format("jdbc:postgresql://%s/%s", dbHostName, dbName), dbUser, dbPassword);
-        createTables();
         initializeStatements();
+        createTables();
         loadCollectionsFromDB();
+        printTable(usersTable);printTable(movieTable);
     }
 
     private static Statement statement;
     private static PreparedStatement getUserStatement;
-    private static PreparedStatement getUserNameStatement;
     private static PreparedStatement insertUserStatement;
     private static PreparedStatement removeUserStatement;
     private static PreparedStatement getMovieStatement;
@@ -49,7 +50,6 @@ public class ServerCollectionManager {
     private static void initializeStatements() throws SQLException {
         statement = connection.createStatement();
         getUserStatement = connection.prepareStatement(String.format("SELECT * FROM %s WHERE user_login=?", usersTable));
-        getUserNameStatement = connection.prepareStatement(String.format("SELECT * FROM %s WHERE user_id=?", usersTable));
         insertUserStatement = connection.prepareStatement(String.format("INSERT INTO %s (" +
                 "user_login," +
                 "user_password" +
@@ -112,9 +112,13 @@ public class ServerCollectionManager {
                 ")", movieTable));
     }
 
-    private static void dropTables() throws SQLException {
-        statement.execute(String.format("DROP TABLE %s", usersTable));
-        statement.execute(String.format("DROP TABLE %s", movieTable));
+    static void dropTables() {
+        try {
+            statement.execute(String.format("DROP TABLE %s", usersTable));
+            statement.execute(String.format("DROP TABLE %s", movieTable));
+        } catch (SQLException e) {
+            ServerController.error(e.getMessage(), e);
+        }
     }
 
     public static long getUserID(String userName) {
@@ -142,11 +146,12 @@ public class ServerCollectionManager {
             insertUserStatement.execute();
 
             getUserStatement.setString(1, userName);
-            ResultSet resultSet = getUserStatement.executeQuery();
-            if (resultSet.next()) {
-                long userID = resultSet.getLong("user_id");
-                userCollection.put(userName, new AbstractMap.SimpleEntry<>(userID, userPassword));
-                return userID;
+            try (ResultSet resultSet = getUserStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    long userID = resultSet.getLong("user_id");
+                    userCollection.put(userName, new AbstractMap.SimpleEntry<>(userID, userPassword));
+                    return userID;
+                }
             }
         }
         return -1;
@@ -197,12 +202,13 @@ public class ServerCollectionManager {
             throw new IllegalAccessException("User with name \"" + userName + "\" doesn't exist");
         }
         getMovieStatement.setInt(1, key);
-        ResultSet resultSet = getMovieStatement.executeQuery();
-        if (!resultSet.next()) {
-            throw new IllegalAccessException("Movie with key \"" + key + "\" doesn't exist");
-        }
-        if (resultSet.getLong("user_id") != userID) {
-            throw new IllegalAccessException("User \"" + userName + "\" doesn't have permission to update movie with key \"" + key + "\"");
+        try (ResultSet resultSet = getMovieStatement.executeQuery()) {
+            if (!resultSet.next()) {
+                throw new IllegalAccessException("Movie with key \"" + key + "\" doesn't exist");
+            }
+            if (resultSet.getLong("user_id") != userID) {
+                throw new IllegalAccessException("User \"" + userName + "\" doesn't have permission to update movie with key \"" + key + "\"");
+            }
         }
     }
 
@@ -289,5 +295,29 @@ public class ServerCollectionManager {
 
     public static Hashtable<Integer,Movie> getMovieCollection() {
         return (Hashtable<Integer, Movie>) movieCollection.clone();
+    }
+
+    static void printTable(String tableName) throws SQLException {
+        try (ResultSet resultSet = statement.executeQuery(String.format("SELECT * from %s", tableName));) {
+            StringBuilder stringBuilder = new StringBuilder();
+            ResultSetMetaData rsmd = resultSet.getMetaData();
+            int columnsNumber = rsmd.getColumnCount();
+            while (resultSet.next()) {
+                for (int i = 1; i <= columnsNumber; i++) {
+                    if (i > 1) stringBuilder.append(",  ");
+                    String columnValue = resultSet.getString(i);
+                    stringBuilder.append(columnValue).append(" ").append(rsmd.getColumnName(i));
+                }
+                stringBuilder.append("\n");
+            }
+            ServerController.info(tableName + " contains:\n" + stringBuilder);
+        }
+    }
+
+    static void printTables() throws SQLException {
+        ServerController.info(userCollection.toString());
+        printTable(usersTable);
+        ServerController.info(movieCollection.toString());
+        printTable(movieTable);
     }
 }

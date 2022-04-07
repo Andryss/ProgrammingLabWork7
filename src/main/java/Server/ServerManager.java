@@ -18,6 +18,10 @@ public class ServerManager {
 
     private ServerManager() {}
 
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(ServerCollectionManager::dropTables, "DropTablesThread"));
+    }
+
     public static void run(int port) throws IOException, FieldException, SQLException, ClassNotFoundException {
         ServerController.info("Initializations start");
         initializations(port);

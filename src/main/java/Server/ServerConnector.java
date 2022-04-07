@@ -22,6 +22,7 @@ import java.util.concurrent.Executors;
 public class ServerConnector {
     private static DatagramChannel channel;
     private static Selector selector;
+    //TODO: add lock to dataBuffer
     private static final ByteBuffer dataBuffer = ByteBuffer.allocate(12000);
 
     private ServerConnector() {}
@@ -57,9 +58,9 @@ public class ServerConnector {
     private static void receiveRequest() throws IOException, ClassNotFoundException {
         SocketAddress client = channel.receive(dataBuffer);
         Request request = ConnectorHelper.objectFromBuffer(dataBuffer.array());
-        dataBuffer.clear();
 
         ServerController.info("Received " + dataBuffer.position() + " bytes buffer with request " + request);
+        dataBuffer.clear();
 
         ServerExecutor.getService().submit(() -> new ServerExecutor(client, request).executeRequest());
     }
