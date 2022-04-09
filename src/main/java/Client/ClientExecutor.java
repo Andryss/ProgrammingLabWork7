@@ -1,6 +1,7 @@
 package Client;
 
 import Commands.*;
+import MovieObjects.UserProfile;
 
 import java.util.*;
 
@@ -12,14 +13,12 @@ import java.util.*;
  * <p>4) Make command build Request</p>
  */
 public class ClientExecutor {
-    private static String userName;
-    private static String userPassword;
+    private static UserProfile userProfile;
     private static final HashMap<String, Command> commandMap = new HashMap<>();
     private static final List<String> history = new LinkedList<>();
 
-    static void initialize(String userName, String userPassword) {
-        ClientExecutor.userName = userName;
-        ClientExecutor.userPassword = userPassword;
+    static void initialize(UserProfile userProfile) {
+        ClientExecutor.userProfile = userProfile;
         fillCommandMap();
     }
 
@@ -61,7 +60,7 @@ public class ClientExecutor {
         }
         command.setArgs(args);
         history.add(commandName);
-        RequestBuilder.createNewRequest(Request.RequestType.EXECUTE_COMMAND, userName, userPassword, commandName);
+        RequestBuilder.createNewRequest(Request.RequestType.EXECUTE_COMMAND, userProfile, commandName);
         command.buildRequest();
     }
 

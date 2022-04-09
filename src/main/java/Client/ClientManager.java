@@ -1,6 +1,7 @@
 package Client;
 
 import Commands.CommandException;
+import MovieObjects.UserProfile;
 import Server.Response;
 
 import java.io.IOException;
@@ -8,6 +9,8 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.NoSuchElementException;
 
 /**
@@ -32,29 +35,13 @@ public class ClientManager {
     private static void connectionStep(int port) throws IOException, ClassNotFoundException {
         while (true) {
             try {
-                InetAddress serverAddress = readServerAddress();
+                InetAddress serverAddress = ClientController.readServerAddress();
                 ClientController.println("Connecting to server \"" + serverAddress + "\"");
                 ClientConnector.initialize(serverAddress, port);
                 ClientController.printlnGood("Connection to server was successful");
                 break;
             } catch (SocketTimeoutException e) {
                 ClientController.printlnErr(e.getMessage());
-            }
-        }
-    }
-
-    private static InetAddress readServerAddress() {
-        ClientController.print("Enter server domain name or IP (or \"exit\"): ");
-        while (true) {
-            String line = ClientController.readLine().trim();
-            if ("exit".equals(line)) {
-                System.exit(0);
-            }
-            try {
-                return InetAddress.getByName(line);
-            } catch (UnknownHostException e) {
-                ClientController.printlnErr("Unknown host \"" + line + "\"");
-                ClientController.print("Enter VALID server domain name or IP: ");
             }
         }
     }
@@ -89,23 +76,29 @@ public class ClientManager {
     }
 
     private static boolean loginStep() {
-        ClientController.print("Enter user login: ");
-        String userLogin = ClientController.readLine().trim();
-        ClientController.print("Enter user password: ");
-        String userPassword = ClientController.readLine().trim();
-        RequestBuilder.createNewRequest(Request.RequestType.LOGIN_USER, userLogin, userPassword);
+        return lrstep(Request.RequestType.LOGIN_USER, Response.ResponseType.LOGIN_SUCCESSFUL, Response.ResponseType.LOGIN_FAILED);
+    }
+
+    private static boolean registerStep() {
+        return lrstep(Request.RequestType.REGISTER_USER, Response.ResponseType.REGISTER_SUCCESSFUL, Response.ResponseType.REGISTER_FAILED);
+    }
+
+    private static boolean lrstep(Request.RequestType requestType, Response.ResponseType responseTypeSuccess, Response.ResponseType responseTypeFail) {
+        UserProfile userProfile = new UserProfile(ClientController.readLogin(),ClientController.readPassword());
+        RequestBuilder.createNewRequest(requestType, userProfile);
         try {
             Response response = ClientConnector.sendToServer(RequestBuilder.getRequest());
-            if (response.getResponseType() == Response.ResponseType.LOGIN_FAILED) {
+            if (response.getResponseType() == responseTypeFail) {
                 ClientController.printlnErr(response.getMessage());
-            } else if (response.getResponseType() == Response.ResponseType.LOGIN_SUCCESSFUL) {
-                ClientExecutor.initialize(userLogin, userPassword);
+            } else if (response.getResponseType() == responseTypeSuccess) {
+                ClientExecutor.initialize(userProfile);
+                addLogoutHook(userProfile);
                 return true;
             } else {
                 throw new IOException("Server has wrong logic: expected \"" +
-                        Response.ResponseType.LOGIN_FAILED +
+                        responseTypeFail +
                         "\" or \"" +
-                        Response.ResponseType.LOGIN_SUCCESSFUL +
+                        responseTypeSuccess +
                         "\", but not \"" +
                         response.getResponseType() +
                         "\"");
@@ -116,32 +109,15 @@ public class ClientManager {
         return false;
     }
 
-    private static boolean registerStep() {
-        ClientController.print("Enter user login: ");
-        String userLogin = ClientController.readLine().trim();
-        ClientController.print("Enter user password: ");
-        String userPassword = ClientController.readLine().trim();
-        RequestBuilder.createNewRequest(Request.RequestType.REGISTER_USER, userLogin, userPassword);
-        try {
-            Response response = ClientConnector.sendToServer(RequestBuilder.getRequest());
-            if (response.getResponseType() == Response.ResponseType.REGISTER_FAILED) {
-                ClientController.printlnErr(response.getMessage());
-            } else if (response.getResponseType() == Response.ResponseType.REGISTER_SUCCESSFUL) {
-                ClientExecutor.initialize(userLogin, userPassword);
-                return true;
-            } else {
-                throw new IOException("Server has wrong logic: expected \"" +
-                        Response.ResponseType.REGISTER_FAILED +
-                        "\" or \"" +
-                        Response.ResponseType.REGISTER_SUCCESSFUL +
-                        "\", but not \"" +
-                        response.getResponseType() +
-                        "\"");
+    private static void addLogoutHook(UserProfile userProfile) {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            RequestBuilder.createNewRequest(Request.RequestType.LOGOUT_USER, userProfile);
+            try {
+                ClientConnector.sendRequest(RequestBuilder.getRequest());
+            } catch (IOException e) {
+                //ignore
             }
-        } catch (IOException | ClassNotFoundException e) {
-            ClientController.printlnErr(e.getMessage());
-        }
-        return false;
+        }));
     }
 
     private static void executionStep() {

@@ -3,10 +3,11 @@ package Server;
 import Client.Request;
 import Commands.Command;
 import Commands.CommandException;
+import MovieObjects.UserProfile;
 
 import java.net.SocketAddress;
 import java.sql.SQLException;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -18,6 +19,7 @@ import java.util.concurrent.Executors;
  */
 public class ServerExecutor {
     private static ExecutorService executorService;
+    private static final List<UserProfile> authorizedUsers = Collections.synchronizedList(new ArrayList<>());
 
     private final SocketAddress client;
     private final Request request;
@@ -39,6 +41,8 @@ public class ServerExecutor {
             checkConnectionRequest();
         } else if (request.getRequestType() == Request.RequestType.LOGIN_USER) {
             loginUserRequest();
+        } else if (request.getRequestType() == Request.RequestType.LOGOUT_USER) {
+            logoutUserRequest();
         } else if (request.getRequestType() == Request.RequestType.REGISTER_USER) {
             registerUserRequest();
         } else if (request.getRequestType() == Request.RequestType.EXECUTE_COMMAND) {
@@ -65,22 +69,49 @@ public class ServerExecutor {
     }
 
     private void loginUserRequest() {
-        boolean userPresented = ServerCollectionManager.isUserPresented(request.getUserName(), request.getUserPassword());
-        ResponseBuilder responseBuilder = ResponseBuilder.createNewResponse(
-                userPresented ? Response.ResponseType.LOGIN_SUCCESSFUL : Response.ResponseType.LOGIN_FAILED,
-                userPresented ? "User successfully logged in" : "Incorrect login or password"
-        );
+        ResponseBuilder responseBuilder;
+        if (ServerCollectionManager.isUserPresented(request.getUserProfile())) {
+            if (authorizedUsers.contains(request.getUserProfile())) {
+                responseBuilder = ResponseBuilder.createNewResponse(
+                        Response.ResponseType.LOGIN_FAILED,
+                        "User already authorized (multi-session is not supported)"
+                );
+            } else {
+                authorizedUsers.add(request.getUserProfile());
+                responseBuilder = ResponseBuilder.createNewResponse(
+                        Response.ResponseType.LOGIN_SUCCESSFUL,
+                        "User successfully logged in"
+                );
+            }
+        } else {
+            responseBuilder = ResponseBuilder.createNewResponse(
+                    Response.ResponseType.LOGIN_FAILED,
+                    "Incorrect login or password"
+            );
+        }
         new Thread(() -> ServerConnector.sendToClient(client, responseBuilder.getResponse()), "SendingLUThread").start();
+    }
+
+    private void logoutUserRequest() {
+        authorizedUsers.remove(request.getUserProfile());
     }
 
     private void registerUserRequest() {
         ResponseBuilder responseBuilder;
         try {
-            long newUserID = ServerCollectionManager.registerUser(request.getUserName(), request.getUserPassword());
-            responseBuilder = ResponseBuilder.createNewResponse(
-                    newUserID == -1 ? Response.ResponseType.REGISTER_FAILED : Response.ResponseType.REGISTER_SUCCESSFUL,
-                    newUserID == -1 ? "User is already registered" : "New user successfully registered"
-            );
+            long newUserID = ServerCollectionManager.registerUser(request.getUserProfile());
+            if (newUserID == -1) {
+                responseBuilder = ResponseBuilder.createNewResponse(
+                        Response.ResponseType.REGISTER_FAILED,
+                        "User is already registered"
+                );
+            } else {
+                authorizedUsers.add(request.getUserProfile());
+                responseBuilder = ResponseBuilder.createNewResponse(
+                        Response.ResponseType.REGISTER_SUCCESSFUL,
+                        "New user successfully registered"
+                );
+            }
         } catch (SQLException throwables) {
             ServerController.error("Error while registering new user: ", throwables);
             responseBuilder = ResponseBuilder.createNewResponse(
@@ -93,23 +124,35 @@ public class ServerExecutor {
     }
 
     private void executeCommandRequest() {
-        ResponseBuilder responseBuilder = ResponseBuilder.createNewResponse(Response.ResponseType.EXECUTION_SUCCESSFUL);
-        serverINFO = new ServerINFO(request.getUserName(), request.getUserPassword(), responseBuilder);
+        ResponseBuilder responseBuilder;
+        if (!authorizedUsers.contains(request.getUserProfile())) {
+            responseBuilder = ResponseBuilder.createNewResponse(
+                    Response.ResponseType.EXECUTION_FAILED,
+                    "User isn't logged in yet"
+            );
+        } else {
+            responseBuilder = ResponseBuilder.createNewResponse(
+                    Response.ResponseType.EXECUTION_SUCCESSFUL
+            );
+            serverINFO = new ServerINFO(request.getUserProfile(), responseBuilder);
 
-        Queue<Command> commandQueue = request.getCommandQueue();
-        try {
-            responseBuilder.add("\u001B[34m" + "START: command \"" + request.getCommandName() + "\" start executing" + "\u001B[0m");
-            if (commandQueue.size() > 1) {
-                validateCommands(commandQueue);
+            Queue<Command> commandQueue = request.getCommandQueue();
+            try {
+                responseBuilder.add("\u001B[34m" + "START: command \"" + request.getCommandName() + "\" start executing" + "\u001B[0m");
+                if (commandQueue.size() > 1) {
+                    validateCommands(commandQueue);
+                }
+                for (Command command : commandQueue) {
+                    command.execute(ExecuteState.EXECUTE, serverINFO);
+                }
+                responseBuilder.add("\u001B[32m" + "SUCCESS: command \"" + request.getCommandName() + "\" successfully completed" + "\u001B[0m");
+            } catch (CommandException e) {
+                responseBuilder = ResponseBuilder.createNewResponse(
+                        Response.ResponseType.EXECUTION_FAILED,
+                        e.getMessage()
+                );
             }
-            for (Command command : commandQueue) {
-                command.execute(ExecuteState.EXECUTE, serverINFO);
-            }
-            responseBuilder.add("\u001B[32m" + "SUCCESS: command \"" + request.getCommandName() + "\" successfully completed" + "\u001B[0m");
-        } catch (CommandException e) {
-            responseBuilder = ResponseBuilder.createNewResponse(Response.ResponseType.EXECUTION_FAILED, e.getMessage());
         }
-
         ResponseBuilder finalResponseBuilder = responseBuilder;
         new Thread(() -> ServerConnector.sendToClient(client, finalResponseBuilder.getResponse()), "SendingECThread").start();
     }

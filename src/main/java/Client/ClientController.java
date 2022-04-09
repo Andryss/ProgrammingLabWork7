@@ -1,7 +1,9 @@
 package Client;
 
 import java.io.PrintStream;
-import java.util.NoSuchElementException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Scanner;
 
 /**
@@ -29,17 +31,56 @@ public class ClientController {
     public static void println(String line) {
         writer.println(line);
     }
-
     public static void print(String line) {
         writer.print(line);
     }
-
     public static void printlnGood(String line) {
         writer.println("\u001B[32m" + line + "\u001B[0m");
     }
-
     public static void printlnErr(String line) {
         writer.println("\u001B[31m" + line + "\u001B[0m");
+    }
+
+    static InetAddress readServerAddress() {
+        print("Enter server domain name or IP (or \"exit\"): ");
+        while (true) {
+            String line = readLine().trim();
+            if ("exit".equals(line)) {
+                System.exit(0);
+            }
+            try {
+                return InetAddress.getByName(line);
+            } catch (UnknownHostException e) {
+                printlnErr("Unknown host \"" + line + "\"");
+                print("Enter VALID server domain name or IP: ");
+            }
+        }
+    }
+
+    private static final int requiredLoginLength = 3;
+    static String readLogin() {
+        while (true) {
+            ClientController.print("Enter user login: ");
+            String userLogin = ClientController.readLine().trim();
+            if (userLogin.length() < requiredLoginLength) {
+                ClientController.printlnErr("Login must have at least " +  requiredLoginLength + " characters");
+            } else {
+                return userLogin;
+            }
+        }
+    }
+
+    private static final int requiredPasswordLength = 3;
+    static String readPassword() {
+        while (true) {
+            ClientController.print("Enter user password: ");
+            String userPassword = ClientController.readLine().trim();
+            if (userPassword.length() < requiredPasswordLength) {
+                ClientController.printlnErr("Password must have at least " +  requiredPasswordLength + " characters");
+            } else {
+                return userPassword;
+            }
+        }
     }
 
     public static Scanner getReader() {

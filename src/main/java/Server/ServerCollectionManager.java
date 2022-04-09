@@ -1,9 +1,6 @@
 package Server;
 
-import MovieObjects.Coordinates;
-import MovieObjects.FieldException;
-import MovieObjects.Movie;
-import MovieObjects.Person;
+import MovieObjects.*;
 
 import java.sql.*;
 import java.time.ZonedDateTime;
@@ -11,13 +8,14 @@ import java.util.AbstractMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public class ServerCollectionManager {
-    //TODO: all lock to collections
     private static Connection connection;
     private static Hashtable<Integer, Movie> movieCollection;
-    private static Hashtable<String, Map.Entry<Long, String>> userCollection;
+    private static Hashtable<String, UserProfile> userCollection;
+    private static final ReentrantLock readWriteLock = new ReentrantLock();
 
     private ServerCollectionManager() {}
 
@@ -42,7 +40,6 @@ public class ServerCollectionManager {
     private static PreparedStatement getUserStatement;
     private static PreparedStatement insertUserStatement;
     private static PreparedStatement removeUserStatement;
-    private static PreparedStatement getMovieStatement;
     private static PreparedStatement insertMovieStatement;
     private static PreparedStatement updateMovieStatement;
     private static PreparedStatement removeMovieStatement;
@@ -55,7 +52,6 @@ public class ServerCollectionManager {
                 "user_password" +
                 ") VALUES (?,?)", usersTable));
         removeUserStatement = connection.prepareStatement(String.format("DELETE FROM %s WHERE user_login=?", usersTable));
-        getMovieStatement = connection.prepareStatement(String.format("SELECT * FROM %s WHERE movie_key=?", movieTable));
         insertMovieStatement = connection.prepareStatement(String.format("INSERT INTO %s (" +
                 "user_id," +
                 "movie_key," +
@@ -131,120 +127,143 @@ public class ServerCollectionManager {
     }
 
     public static long getUserID(String userName) {
-        return userCollection.get(userName) == null ? -1 : userCollection.get(userName).getKey();
+        return userCollection.get(userName) == null ? -1 : userCollection.get(userName).getId();
     }
 
-    public static long getUserID(String userName, String userPassword) {
-        Map.Entry<Long,String> entry = userCollection.get(userName);
-        return (entry != null && entry.getValue().equals(userPassword)) ? entry.getKey() : -1;
+    public static long getUserID(UserProfile user) {
+        UserProfile userProfile = userCollection.get(user.getName());
+        return (userProfile != null && userProfile.getPassword().equals(user.getPassword())) ? userProfile.getId() : -1;
     }
 
-    public static boolean isUserPresented(String userName, String userPassword) {
-        return getUserID(userName, userPassword) != -1;
+    public static boolean isUserPresented(UserProfile userProfile) {
+        return getUserID(userProfile) != -1;
     }
 
     public static String getUserName(long id) {
-        Optional<Map.Entry<String,Map.Entry<Long,String>>> user = userCollection.entrySet().stream().filter(e -> e.getValue().getKey() == id).findAny();
+        Optional<Map.Entry<String,UserProfile>> user = userCollection.entrySet().stream().filter(e -> e.getValue().getId() == id).findAny();
         return user.map(Map.Entry::getKey).orElse(null);
     }
 
-    public static long registerUser(String userName, String userPassword) throws SQLException {
-        if (getUserID(userName, userPassword) == -1) {
-            insertUserStatement.setString(1, userName);
-            insertUserStatement.setString(2, userPassword);
-            insertUserStatement.execute();
+    public static long registerUser(UserProfile userProfile) throws SQLException {
+        if (getUserID(userProfile) == -1) {
+            readWriteLock.lock();
+            try {
+                insertUserStatement.setString(1, userProfile.getName());
+                insertUserStatement.setString(2, userProfile.getPassword());
+                insertUserStatement.execute();
 
-            getUserStatement.setString(1, userName);
-            try (ResultSet resultSet = getUserStatement.executeQuery()) {
-                if (resultSet.next()) {
-                    long userID = resultSet.getLong("user_id");
-                    userCollection.put(userName, new AbstractMap.SimpleEntry<>(userID, userPassword));
-                    return userID;
+                getUserStatement.setString(1, userProfile.getName());
+                try (ResultSet resultSet = getUserStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        long userID = resultSet.getLong("user_id");
+                        userCollection.put(userProfile.getName(), new UserProfile(userProfile.getName(), userProfile.getPassword(), userID));
+                        return userID;
+                    }
                 }
+            } finally {
+                readWriteLock.unlock();
             }
         }
         return -1;
     }
 
-    public static Map.Entry<Long,String> removeUser(String userName, String userPassword) throws SQLException {
-        if (userCollection.get(userName).getValue().equals(userPassword)) {
-            removeUserStatement.setString(1, userName);
+    public static UserProfile removeUser(UserProfile userProfile) throws SQLException {
+        readWriteLock.lock();
+        try {
+            if (!userCollection.get(userProfile.getName()).getPassword().equals(userProfile.getPassword())) {
+                return null;
+            }
+            removeUserStatement.setString(1, userProfile.getName());
             removeUserStatement.executeUpdate();
-            return userCollection.remove(userName);
+            return userCollection.remove(userProfile.getName());
+        } finally {
+            readWriteLock.unlock();
         }
-        return null;
     }
 
     public static Movie getMovie(Integer key) {
         return movieCollection.get(key).clone();
     }
 
-    public static Movie putMovie(Integer key, Movie movie, String userName, String userPassword) throws SQLException, IllegalAccessException {
-        long userID = getUserID(userName, userPassword);
+    public static Movie putMovie(Integer key, Movie movie, UserProfile userProfile) throws SQLException, IllegalAccessException {
+        long userID = getUserID(userProfile);
         if (userID == -1) {
-            throw new IllegalAccessException("User with name \"" + userName + "\" doesn't exist");
+            throw new IllegalAccessException("User with name \"" + userProfile.getName() + "\" doesn't exist");
         }
-        insertMovieStatement.setLong(1, userID);
-        insertMovieStatement.setInt(2, key);
-        insertMovieStatement.setString(3, movie.getName());
-        insertMovieStatement.setFloat(4, movie.getCoordinates().getX());
-        insertMovieStatement.setFloat(5, movie.getCoordinates().getY());
-        insertMovieStatement.setString(6, movie.getCreationDate().toString());
-        insertMovieStatement.setLong(7, movie.getOscarsCount());
-        insertMovieStatement.setInt(8, movie.getLength());
-        insertMovieStatement.setString(9, (movie.getGenre() == null ?
-                "null" : movie.getGenre().toString()));
-        insertMovieStatement.setString(10, movie.getMpaaRating().toString());
-        insertMovieStatement.setString(11, movie.getScreenwriter().getName());
-        insertMovieStatement.setString(12, movie.getScreenwriter().getBirthdayString());
-        insertMovieStatement.setString(13, (movie.getScreenwriter().getHairColor() == null ?
-                "null" : movie.getScreenwriter().getHairColor().toString()));
+        readWriteLock.lock();
+        try {
+            insertMovieStatement.setLong(1, userID);
+            insertMovieStatement.setInt(2, key);
+            insertMovieStatement.setString(3, movie.getName());
+            insertMovieStatement.setFloat(4, movie.getCoordinates().getX());
+            insertMovieStatement.setFloat(5, movie.getCoordinates().getY());
+            insertMovieStatement.setString(6, movie.getCreationDate().toString());
+            insertMovieStatement.setLong(7, movie.getOscarsCount());
+            insertMovieStatement.setInt(8, movie.getLength());
+            insertMovieStatement.setString(9, (movie.getGenre() == null ?
+                    "null" : movie.getGenre().toString()));
+            insertMovieStatement.setString(10, movie.getMpaaRating().toString());
+            insertMovieStatement.setString(11, movie.getScreenwriter().getName());
+            insertMovieStatement.setString(12, movie.getScreenwriter().getBirthdayString());
+            insertMovieStatement.setString(13, (movie.getScreenwriter().getHairColor() == null ?
+                    "null" : movie.getScreenwriter().getHairColor().toString()));
 
-        insertMovieStatement.executeUpdate();
-        movie.setOwner(userName);
+            insertMovieStatement.executeUpdate();
+        } finally {
+            readWriteLock.unlock();
+        }
+        movie.setOwner(userProfile.getName());
         return movieCollection.put(key, movie);
     }
 
-    private static void checkPermission(Integer key, String userName, String userPassword) throws IllegalAccessException, SQLException {
-        long userID = getUserID(userName, userPassword);
-        if (userID == -1) {
-            throw new IllegalAccessException("User with name \"" + userName + "\" doesn't exist");
+    private static void checkPermission(Integer key, UserProfile userProfile) throws IllegalAccessException {
+        if (!isUserPresented(userProfile)) {
+            throw new IllegalAccessException("Current user doesn't exist");
         }
-        getMovieStatement.setInt(1, key);
-        try (ResultSet resultSet = getMovieStatement.executeQuery()) {
-            if (!resultSet.next()) {
-                throw new IllegalAccessException("Movie with key \"" + key + "\" doesn't exist");
-            }
-            if (resultSet.getLong("user_id") != userID) {
-                throw new IllegalAccessException("User \"" + userName + "\" doesn't have permission to update movie with key \"" + key + "\"");
-            }
+        Movie movie = movieCollection.get(key);
+        if (movie == null) {
+            throw new IllegalAccessException("Movie with key \"" + key + "\" doesn't exist");
+        }
+        if (!movie.getOwner().equals(userProfile.getName())) {
+            throw new IllegalAccessException("User \"" + userProfile.getName() + "\" doesn't have permission to update movie with key \"" + key + "\"");
         }
     }
 
-    public static Movie updateMovie(Integer key, Movie movie, String userName, String userPassword) throws SQLException, IllegalAccessException {
-        checkPermission(key, userName, userPassword);
-        updateMovieStatement.setString(1, movie.getName());
-        updateMovieStatement.setFloat(2, movie.getCoordinates().getX());
-        updateMovieStatement.setFloat(3, movie.getCoordinates().getY());
-        updateMovieStatement.setString(4, movie.getCreationDate().toString());
-        updateMovieStatement.setLong(5, movie.getOscarsCount());
-        updateMovieStatement.setInt(6, movie.getLength());
-        updateMovieStatement.setString(7, (movie.getGenre() == null ?
-                "null" : movie.getGenre().toString()));
-        updateMovieStatement.setString(8, movie.getMpaaRating().toString());
-        updateMovieStatement.setString(9, movie.getScreenwriter().getName());
-        updateMovieStatement.setString(10, movie.getScreenwriter().getBirthdayString());
-        updateMovieStatement.setString(11, (movie.getScreenwriter().getHairColor() == null ?
-                "null" : movie.getScreenwriter().getHairColor().toString()));
-        updateMovieStatement.setInt(12, key);
-        updateMovieStatement.executeUpdate();
+    public static Movie updateMovie(Integer key, Movie movie, UserProfile userProfile) throws SQLException, IllegalAccessException {
+        checkPermission(key, userProfile);
+        readWriteLock.lock();
+        try {
+            updateMovieStatement.setString(1, movie.getName());
+            updateMovieStatement.setFloat(2, movie.getCoordinates().getX());
+            updateMovieStatement.setFloat(3, movie.getCoordinates().getY());
+            updateMovieStatement.setString(4, movie.getCreationDate().toString());
+            updateMovieStatement.setLong(5, movie.getOscarsCount());
+            updateMovieStatement.setInt(6, movie.getLength());
+            updateMovieStatement.setString(7, (movie.getGenre() == null ?
+                    "null" : movie.getGenre().toString()));
+            updateMovieStatement.setString(8, movie.getMpaaRating().toString());
+            updateMovieStatement.setString(9, movie.getScreenwriter().getName());
+            updateMovieStatement.setString(10, movie.getScreenwriter().getBirthdayString());
+            updateMovieStatement.setString(11, (movie.getScreenwriter().getHairColor() == null ?
+                    "null" : movie.getScreenwriter().getHairColor().toString()));
+            updateMovieStatement.setInt(12, key);
+            updateMovieStatement.executeUpdate();
+        } finally {
+            readWriteLock.unlock();
+        }
+        movie.setOwner(movieCollection.get(key).getOwner());
         return movieCollection.put(key, movie);
     }
 
-    public static Movie removeMovie(Integer key, String userName, String userPassword) throws SQLException, IllegalAccessException {
-        checkPermission(key, userName, userPassword);
-        removeMovieStatement.setInt(1, key);
-        removeMovieStatement.executeUpdate();
+    public static Movie removeMovie(Integer key, UserProfile userProfile) throws SQLException, IllegalAccessException {
+        checkPermission(key, userProfile);
+        readWriteLock.lock();
+        try {
+            removeMovieStatement.setInt(1, key);
+            removeMovieStatement.executeUpdate();
+        } finally {
+            readWriteLock.lock();
+        }
         return movieCollection.remove(key);
     }
 
@@ -252,7 +271,7 @@ public class ServerCollectionManager {
         ResultSet usersResultSet = statement.executeQuery(String.format("SELECT * FROM %s", usersTable));
         userCollection = new Hashtable<>();
         while (usersResultSet.next()) {
-            Map.Entry<String,Map.Entry<Long,String>> entry = parseUser(usersResultSet);
+            Map.Entry<String,UserProfile> entry = parseUser(usersResultSet);
             userCollection.put(entry.getKey(), entry.getValue());
         }
 
@@ -264,12 +283,13 @@ public class ServerCollectionManager {
         }
     }
 
-    private static Map.Entry<String,Map.Entry<Long,String>> parseUser(ResultSet resultSet) throws SQLException {
+    private static Map.Entry<String,UserProfile> parseUser(ResultSet resultSet) throws SQLException {
         return new AbstractMap.SimpleEntry<>(
                 resultSet.getString("user_login"),
-                new AbstractMap.SimpleEntry<>(
-                        resultSet.getLong("user_id"),
-                        resultSet.getString("user_password")
+                new UserProfile(
+                        resultSet.getString("user_login"),
+                        resultSet.getString("user_password"),
+                        resultSet.getLong("user_id")
                 )
         );
     }
@@ -307,7 +327,7 @@ public class ServerCollectionManager {
     }
 
     static void printTables() throws SQLException {
-        ServerController.info(userCollection.toString());
-        ServerController.info(movieCollection.toString());
+        ServerController.info("Users: " + userCollection.toString());
+        ServerController.info("Movies: " + movieCollection.toString());
     }
 }

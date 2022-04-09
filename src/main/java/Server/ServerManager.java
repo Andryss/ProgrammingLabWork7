@@ -5,8 +5,6 @@ import MovieObjects.FieldException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.sql.SQLException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * <p>ServerManager consist of main server logic:</p>
@@ -22,6 +20,7 @@ public class ServerManager {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 ServerCollectionManager.close();
                 ServerConnector.close();
+                ServerController.info("All services closed");
         }, "CloseThread"));
     }
 

@@ -164,7 +164,7 @@ public class Movie implements Comparable<Movie>, Serializable, Cloneable {
     public void setMpaaRating(String mpaaRating) throws FieldException {
         try {
             this.mpaaRating = MpaaRating.valueOf(mpaaRating.toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | NullPointerException e) {
             throw new FieldException(mpaaRating, "Value must be one of: " + Arrays.toString(MpaaRating.values()));
         }
     }
@@ -251,6 +251,7 @@ public class Movie implements Comparable<Movie>, Serializable, Cloneable {
     public String toString() {
         return "Movie{" +
                 "id=" + id +
+                ", owner='" + owner + '\'' +
                 ", name='" + name + '\'' +
                 ", coordinates=" + coordinates +
                 ", creationDate=" + creationDate +
@@ -268,6 +269,7 @@ public class Movie implements Comparable<Movie>, Serializable, Cloneable {
         if (o == null || getClass() != o.getClass()) return false;
         Movie movie = (Movie) o;
         return id == movie.id &&
+                owner.equals(movie.owner) &&
                 oscarsCount == movie.oscarsCount &&
                 length == movie.length &&
                 name.equals(movie.name) &&
@@ -280,7 +282,7 @@ public class Movie implements Comparable<Movie>, Serializable, Cloneable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, coordinates, creationDate, oscarsCount, length, genre, mpaaRating, screenwriter);
+        return Objects.hash(id, owner, name, coordinates, creationDate, oscarsCount, length, genre, mpaaRating, screenwriter);
     }
 
     @Override

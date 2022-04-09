@@ -1,6 +1,7 @@
 package Server;
 
 import MovieObjects.Movie;
+import MovieObjects.UserProfile;
 
 import java.sql.SQLException;
 import java.util.Hashtable;
@@ -9,14 +10,12 @@ import java.util.Hashtable;
  * Class ServerINFO contains of all the information, that can be useful for commands (collection, name of file etc.)
  */
 public class ServerINFO {
-    protected final String userName;
-    private final String userPassword;
+    protected final UserProfile userProfile;
     private final ResponseBuilder responseBuilder;
 
 
-    public ServerINFO(String userName, String userPassword, ResponseBuilder responseBuilder) {
-        this.userName = userName;
-        this.userPassword = userPassword;
+    public ServerINFO(UserProfile userProfile, ResponseBuilder responseBuilder) {
+        this.userProfile = userProfile;
         this.responseBuilder = responseBuilder;
     }
 
@@ -25,15 +24,15 @@ public class ServerINFO {
     }
 
     public Movie putMovie(Integer key, Movie movie) throws SQLException, IllegalAccessException {
-        return ServerCollectionManager.putMovie(key, movie, userName, userPassword);
+        return ServerCollectionManager.putMovie(key, movie, userProfile);
     }
 
     public Movie updateMovie(Integer key, Movie movie) throws SQLException, IllegalAccessException {
-        return ServerCollectionManager.updateMovie(key, movie, userName, userPassword);
+        return ServerCollectionManager.updateMovie(key, movie, userProfile);
     }
 
     public Movie removeMovie(Integer key) throws SQLException, IllegalAccessException {
-        return ServerCollectionManager.removeMovie(key, userName, userPassword);
+        return ServerCollectionManager.removeMovie(key, userProfile);
     }
 
     public Hashtable<Integer,Movie> getMovieCollection() {
@@ -45,15 +44,15 @@ public class ServerINFO {
     }
 
     public ServerINFO validationClone() {
-        return new ServerINFOClone(userName, userPassword, responseBuilder);
+        return new ServerINFOClone(userProfile, responseBuilder);
     }
 
 
     private static class ServerINFOClone extends ServerINFO {
         private final Hashtable<Integer, Movie> movieCollection = ServerCollectionManager.getMovieCollection();
 
-        public ServerINFOClone(String userName, String userPassword, ResponseBuilder responseBuilder) {
-            super(userName, userPassword, responseBuilder);
+        public ServerINFOClone(UserProfile userProfile, ResponseBuilder responseBuilder) {
+            super(userProfile, responseBuilder);
         }
 
         @Override
@@ -65,7 +64,7 @@ public class ServerINFO {
             if (movieCollection.containsKey(key)) {
                 throw new SQLException("Movie already exists");
             }
-            movie.setOwner(userName);
+            movie.setOwner(userProfile.getName());
             return movieCollection.put(key, movie);
         }
         @Override
@@ -73,8 +72,8 @@ public class ServerINFO {
             if (movieCollection.get(key) != null) {
                 throw new IllegalAccessException("Movie with key \"" + key + "\" doesn't exist");
             }
-            if (movieCollection.get(key).getOwner().equals(userName)) {
-                throw new IllegalAccessException("User \"" + userName + "\" doesn't have permission to update movie with key \"" + key + "\"");
+            if (movieCollection.get(key).getOwner().equals(userProfile.getName())) {
+                throw new IllegalAccessException("User \"" + userProfile.getName() + "\" doesn't have permission to update movie with key \"" + key + "\"");
             }
             return putMovie(key, movie);
         }
@@ -83,8 +82,8 @@ public class ServerINFO {
             if (movieCollection.get(key) != null) {
                 throw new IllegalAccessException("Movie with key \"" + key + "\" doesn't exist");
             }
-            if (movieCollection.get(key).getOwner().equals(userName)) {
-                throw new IllegalAccessException("User \"" + userName + "\" doesn't have permission to remove movie with key \"" + key + "\"");
+            if (movieCollection.get(key).getOwner().equals(userProfile.getName())) {
+                throw new IllegalAccessException("User \"" + userProfile.getName() + "\" doesn't have permission to remove movie with key \"" + key + "\"");
             }
             return movieCollection.remove(key);
         }

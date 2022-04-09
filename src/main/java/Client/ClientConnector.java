@@ -44,7 +44,7 @@ public class ClientConnector {
                         "\"");
             }
         } catch (SocketTimeoutException e) {
-            throw new IOException("Server is not responding, try later or choose another server :(");
+            throw new SocketTimeoutException("Server is not responding, try later or choose another server :(");
         }
     }
 
@@ -65,7 +65,7 @@ public class ClientConnector {
         }
     }
 
-    private static void sendRequest(Request request) throws IOException {
+    static void sendRequest(Request request) throws IOException {
         sendPacket(ConnectorHelper.objectToBuffer(request));
     }
 

@@ -11,9 +11,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * <p>ServerConnector implements (1) and (3) steps in ServerManager</p>
@@ -22,7 +19,6 @@ import java.util.concurrent.Executors;
 public class ServerConnector {
     private static DatagramChannel channel;
     private static Selector selector;
-    //TODO: add lock to dataBuffer
     private static final ByteBuffer dataBuffer = ByteBuffer.allocate(12000);
 
     private ServerConnector() {}
@@ -65,25 +61,29 @@ public class ServerConnector {
     }
 
     private static void receiveRequest() throws IOException, ClassNotFoundException {
-        SocketAddress client = channel.receive(dataBuffer);
-        Request request = ConnectorHelper.objectFromBuffer(dataBuffer.array());
+        synchronized (dataBuffer) {
+            SocketAddress client = channel.receive(dataBuffer);
+            Request request = ConnectorHelper.objectFromBuffer(dataBuffer.array());
 
-        ServerController.info("Received " + dataBuffer.position() + " bytes buffer with request " + request);
-        dataBuffer.clear();
+            ServerController.info("Received " + dataBuffer.position() + " bytes buffer with request " + request);
+            dataBuffer.clear();
 
-        ServerExecutor.getService().submit(() -> new ServerExecutor(client, request).executeRequest());
+            ServerExecutor.getService().submit(() -> new ServerExecutor(client, request).executeRequest());
+        }
     }
 
     static void sendToClient(SocketAddress client, Response response) {
         ServerController.info("Sending to client " + client.toString() + " starts");
 
-        try {
-            dataBuffer.put(ConnectorHelper.objectToBuffer(response));
-            dataBuffer.flip();
-            channel.send(dataBuffer, client);
-            dataBuffer.clear();
-        } catch (IOException e) {
-            ServerController.error(e.getMessage(), e);
+        synchronized (dataBuffer) {
+            try {
+                dataBuffer.put(ConnectorHelper.objectToBuffer(response));
+                dataBuffer.flip();
+                channel.send(dataBuffer, client);
+                dataBuffer.clear();
+            } catch (IOException e) {
+                ServerController.error(e.getMessage(), e);
+            }
         }
 
         ServerController.info("Sending to client completed");
