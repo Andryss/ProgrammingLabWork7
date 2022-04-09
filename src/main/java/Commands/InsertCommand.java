@@ -25,7 +25,7 @@ public class InsertCommand extends ElementCommand {
         try {
             server.putMovie(key, readMovie);
         } catch (SQLException e) {
-            throw new CommandException("Movie with key \"" + key + "\" already exists");
+            throw new CommandException(getCommandName(), "Movie with key \"" + key + "\" already exists");
         } catch (IllegalAccessException e) {
             //ignore
         }

@@ -132,7 +132,7 @@ public class ServerCollectionManager {
 
     public static long getUserID(UserProfile user) {
         UserProfile userProfile = userCollection.get(user.getName());
-        return (userProfile != null && userProfile.getPassword().equals(user.getPassword())) ? userProfile.getId() : -1;
+        return (userProfile != null && userProfile.getPassword().equals(user.getPassword()) ? userProfile.getId() : -1);
     }
 
     public static boolean isUserPresented(UserProfile userProfile) {

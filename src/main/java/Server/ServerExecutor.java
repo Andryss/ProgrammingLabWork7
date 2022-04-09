@@ -54,6 +54,7 @@ public class ServerExecutor {
         ServerController.info("Request executed");
 
         try {
+            ServerController.info("Authorized users: " + authorizedUsers);
             ServerCollectionManager.printTables();
         } catch (SQLException e) {
             ServerController.error(e.getMessage(), e);
@@ -93,7 +94,7 @@ public class ServerExecutor {
     }
 
     private void logoutUserRequest() {
-        authorizedUsers.remove(request.getUserProfile());
+        authorizedUsers.stream().filter(u -> u.equals(request.getUserProfile())).forEach(authorizedUsers::remove);
     }
 
     private void registerUserRequest() {
@@ -115,7 +116,7 @@ public class ServerExecutor {
         } catch (SQLException throwables) {
             ServerController.error("Error while registering new user: ", throwables);
             responseBuilder = ResponseBuilder.createNewResponse(
-                    Response.ResponseType.LOGIN_FAILED,
+                    Response.ResponseType.REGISTER_FAILED,
                     "Some server error, try again later"
             );
         }
@@ -125,7 +126,7 @@ public class ServerExecutor {
 
     private void executeCommandRequest() {
         ResponseBuilder responseBuilder;
-        if (!authorizedUsers.contains(request.getUserProfile())) {
+        if (authorizedUsers.stream().noneMatch((u) -> u.equals(request.getUserProfile()))) {
             responseBuilder = ResponseBuilder.createNewResponse(
                     Response.ResponseType.EXECUTION_FAILED,
                     "User isn't logged in yet"

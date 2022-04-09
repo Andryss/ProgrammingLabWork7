@@ -14,28 +14,11 @@ public class RequestBuilder {
     private RequestBuilder() {}
 
     public static void createNewRequest(Request.RequestType requestType) {
-        request = new Request(requestType);
-        if (userProfile != null) {
-            request.setUserProfile(new UserProfile(userProfile.getName(), userProfile.getPassword()));
-        }
+        request = new Request(requestType, userProfile);
     }
 
     public static void createNewRequest(Request.RequestType requestType, String commandName) {
-        createNewRequest(requestType);
-        request.setCommandName(commandName);
-    }
-
-    public static void createNewRequest(Request.RequestType requestType,
-                                        UserProfile userProfile) {
-        setUserProfile(userProfile);
-        createNewRequest(requestType);
-    }
-
-    public static void createNewRequest(Request.RequestType requestType,
-                                        UserProfile userProfile,
-                                        String commandName) {
-        setUserProfile(userProfile);
-        createNewRequest(requestType, commandName);
+        request = new Request(requestType, userProfile, commandName);
     }
 
     public static void setUserProfile(UserProfile userProfile) {

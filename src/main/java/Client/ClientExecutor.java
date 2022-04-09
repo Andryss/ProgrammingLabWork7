@@ -13,12 +13,10 @@ import java.util.*;
  * <p>4) Make command build Request</p>
  */
 public class ClientExecutor {
-    private static UserProfile userProfile;
     private static final HashMap<String, Command> commandMap = new HashMap<>();
     private static final List<String> history = new LinkedList<>();
 
-    static void initialize(UserProfile userProfile) {
-        ClientExecutor.userProfile = userProfile;
+    static void initialize() {
         fillCommandMap();
     }
 
@@ -60,7 +58,7 @@ public class ClientExecutor {
         }
         command.setArgs(args);
         history.add(commandName);
-        RequestBuilder.createNewRequest(Request.RequestType.EXECUTE_COMMAND, userProfile, commandName);
+        RequestBuilder.createNewRequest(Request.RequestType.EXECUTE_COMMAND, commandName);
         command.buildRequest();
     }
 

@@ -1,20 +1,23 @@
 package MovieObjects;
 
+import java.io.Serializable;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Objects;
 
-public class UserProfile {
+public class UserProfile implements Serializable {
     private final String name;
     private final String encryptedPassword;
-    private long id;
+    private transient long id;
 
     public UserProfile(String name, String password) {
         this.name = name;
         this.encryptedPassword = encryptPassword(password);
     }
 
-    public UserProfile(String name, String password, long id) {
-        this(name, password);
+    public UserProfile(String name, String encryptedPassword, long id) {
+        this.name = name;
+        this.encryptedPassword = encryptedPassword;
         this.id = id;
     }
 
@@ -42,6 +45,7 @@ public class UserProfile {
         return id;
     }
 
+
     @Override
     public String toString() {
         return "UserProfile{" +
@@ -49,5 +53,18 @@ public class UserProfile {
                 ", encryptedPassword='" + encryptedPassword + '\'' +
                 ", id=" + id +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserProfile that = (UserProfile) o;
+        return Objects.equals(name, that.name) && Objects.equals(encryptedPassword, that.encryptedPassword);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, encryptedPassword);
     }
 }

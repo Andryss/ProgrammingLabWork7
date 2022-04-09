@@ -85,14 +85,15 @@ public class ClientManager {
 
     private static boolean lrstep(Request.RequestType requestType, Response.ResponseType responseTypeSuccess, Response.ResponseType responseTypeFail) {
         UserProfile userProfile = new UserProfile(ClientController.readLogin(),ClientController.readPassword());
-        RequestBuilder.createNewRequest(requestType, userProfile);
+        RequestBuilder.setUserProfile(userProfile);
+        RequestBuilder.createNewRequest(requestType);
         try {
             Response response = ClientConnector.sendToServer(RequestBuilder.getRequest());
             if (response.getResponseType() == responseTypeFail) {
                 ClientController.printlnErr(response.getMessage());
             } else if (response.getResponseType() == responseTypeSuccess) {
-                ClientExecutor.initialize(userProfile);
-                addLogoutHook(userProfile);
+                ClientExecutor.initialize();
+                addLogoutHook();
                 return true;
             } else {
                 throw new IOException("Server has wrong logic: expected \"" +
@@ -109,9 +110,9 @@ public class ClientManager {
         return false;
     }
 
-    private static void addLogoutHook(UserProfile userProfile) {
+    private static void addLogoutHook() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            RequestBuilder.createNewRequest(Request.RequestType.LOGOUT_USER, userProfile);
+            RequestBuilder.createNewRequest(Request.RequestType.LOGOUT_USER);
             try {
                 ClientConnector.sendRequest(RequestBuilder.getRequest());
             } catch (IOException e) {

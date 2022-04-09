@@ -3,6 +3,7 @@ package Client;
 import Commands.Command;
 import MovieObjects.UserProfile;
 
+import javax.jws.soap.SOAPBinding;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -12,19 +13,18 @@ import java.util.Queue;
  */
 public class Request implements Serializable {
     private final RequestType requestType;
-    private UserProfile userProfile;
+    private final UserProfile userProfile;
     private String commandName;
     private final Queue<Command> commandQueue = new LinkedList<>();
 
-    public Request(RequestType requestType) {
+    public Request(RequestType requestType, UserProfile userProfile) {
         this.requestType = requestType;
+        this.userProfile = userProfile;
     }
 
-    Request setUserProfile(UserProfile userProfile) {
-        this.userProfile = userProfile; return this;
-    }
-    Request setCommandName(String commandName) {
-        this.commandName = commandName; return this;
+    public Request(RequestType requestType, UserProfile userProfile, String commandName) {
+        this(requestType, userProfile);
+        this.commandName = commandName;
     }
 
     public RequestType getRequestType() {
