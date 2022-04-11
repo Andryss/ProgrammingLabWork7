@@ -1,0 +1,84 @@
+@startuml
+
+package MovieObjects {
+    class Coordinates {
+    --Fields--
+    - float x
+    - Float y
+    }
+
+    class FieldException {
+    --Fields--
+    - final String value
+    - final String required
+    }
+
+    annotation FieldSetter {
+    fieldName() : String
+    example() : String
+    index() : int
+    }
+
+    class Movie {
+    --Fields--
+    - final long id
+    - String name
+    - Coordinates coordinates
+    - final ZonedDateTime creationDate
+    - long oscarsCount
+    - int length
+    - MovieGenre genre
+    - MpaaRating mpaaRating
+    - Person screenwriter
+    ~ static long global_id = 1
+    --InnerClasses--
+    + enum MpaaRating
+    + enum MovieGenre
+    }
+
+    enum MpaaRating {
+    G
+    PG
+    PG_13
+    R
+    NC_17
+    }
+
+    enum MovieGenre {
+    ACTION
+    WESTERN
+    DRAMA
+    COMEDY
+    HORROR
+    }
+
+    class Person {
+    --Fields--
+    - String name
+    - Date birthday
+    - Color hairColor
+    --InnerClasses--
+    + enum Color
+    }
+
+    enum Color {
+    RED
+    BLACK
+    BLUE
+    WHITE
+    BROWN
+    }
+
+    class UserProfile {
+    --Fields--
+    - final String name
+    - final String encryptedPassword
+    - transient long id
+    }
+
+    Color -up-+ Person
+    MpaaRating -up-+ Movie
+    MovieGenre -up-+ Movie
+}
+
+@enduml

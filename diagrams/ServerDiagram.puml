@@ -1,0 +1,108 @@
+@startuml
+
+package Server {
+    abstract class ConnectorHelper {
+    --Methods--
+    + static <T> objectToBuffer(T obj) : byte[]
+    + static <T> objectFromBuffer(byte[] data) : T
+    }
+
+    class Response {
+    --Fields--
+    - ResponseType responseType
+    - StringBuilder message
+    --InnerClasses--
+    + enum ResponseType
+    }
+
+    enum ResponseType {
+    CONNECTION_SUCCESSFUL
+    LOGIN_SUCCESSFUL
+    LOGIN_FAILED
+    REGISTER_SUCCESSFUL
+    REGISTER_FAILED
+    EXECUTION_SUCCESSFUL
+    EXECUTION_FAILED
+    }
+
+    ResponseType -up-+ Response
+
+    class ResponseBuilder {
+    --Fields--
+    - final Response response
+    }
+
+    class ServerCollectionManager {
+    --Fields--
+    - static Connection connection
+    - static Hashtable<Integer, Movie> movieCollection
+    - static Hashtable<String, UserProfile> userCollection
+    - static final ReentrantLock readWriteLock = new ReentrantLock()
+    - static final String dbHostName = "pg"
+    - static final String dbName = "studs"
+    - static final String dbUser = "s335155"
+    - static final String dbPassword = "wpr492"
+    - static final String usersTable = "users_335155"
+    - static final String movieTable = "movie_335155"
+    - static Statement statement
+    - static PreparedStatement getUserStatement
+    - static PreparedStatement insertUserStatement
+    - static PreparedStatement removeUserStatement
+    - static PreparedStatement insertMovieStatement
+    - static PreparedStatement updateMovieStatement
+    - static PreparedStatement removeMovieStatement
+    }
+
+    class ServerConnector {
+    --Fields--
+    - static DatagramChannel channel
+    - static Selector selector
+    - static final ByteBuffer dataBuffer = ByteBuffer.allocate(12000)
+    --Methods--
+    + static run() : void
+    }
+
+    class ServerController {
+    --Fields--
+    - static final Logger logger = LogManager.getLogger()
+    }
+
+    class ServerExecutor {
+    --Fields--
+    - static ExecutorService executorService
+    - static final List<UserProfile> authorizedUsers = Collections.synchronizedList(new ArrayList<>())
+    - final SocketAddress client
+    - final Request request
+    - ServerINFO serverINFO
+    --InnerClasses--
+    + enum ExecuteState
+    }
+
+    enum ExecuteState {
+    EXECUTE
+    VALIDATE
+    }
+
+    class ServerINFO {
+    --Fields--
+    # final UserProfile userProfile
+    - final ResponseBuilder responseBuilder
+    --InnerClasses--
+    - static class ServerINFOClone
+    }
+
+    class ServerINFOClone {
+    --Fields--
+    - final Hashtable<Integer, Movie> movieCollection = ServerCollectionManager.getMovieCollection()
+    }
+
+    class ServerManager {
+    --Methods--
+    + static run(int port) : void
+    }
+
+    ExecuteState -up-+ ServerExecutor
+    ServerINFOClone -up-+ ServerINFO
+}
+
+@enduml

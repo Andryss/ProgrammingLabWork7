@@ -1,0 +1,78 @@
+@startuml
+
+package Client {
+    class ClientConnector {
+    --Fields--
+    - static DatagramSocket socket
+    - static InetAddress serverAddress
+    - static int serverPort
+    - static final ByteBuffer dataBuffer = ByteBuffer.allocate(12000)
+    }
+
+    class ClientController {
+    --Fields--
+    - static final Scanner reader = new Scanner(System.in)
+    - static final PrintStream writer = System.out
+    }
+
+    class ClientExecutor {
+    --Fields--
+    - static final HashMap<String, Command> commandMap = new HashMap<>()
+    - static final List<String> history = new LinkedList<>()
+    }
+
+    class ClientManager {
+    --Methods--
+    + static run(int port) : void
+    }
+
+    class Request {
+    --Fields--
+    - final RequestType requestType
+    - final UserProfile userProfile
+    - String commandName
+    - final Queue<Command> commandQueue = new LinkedList<>()
+    --InnerClasses--
+    + enum RequestType
+    }
+
+    enum RequestType {
+    CHECK_CONNECTION
+    LOGIN_USER
+    LOGOUT_USER
+    REGISTER_USER
+    EXECUTE_COMMAND
+    }
+
+    RequestType -up-+ Request
+
+    class RequestBuilder {
+    --Fields--
+    - static UserProfile userProfile
+    - static Request request
+    }
+
+    package File {
+        class FileController {
+        --Fields--
+        - final Scanner reader
+        - final File file
+        }
+
+        class FileExecutor {
+        --Fields--
+        - HashMap<String, Command> commandMap = new HashMap<>()
+        - final FileExecutor caller
+        - final String fileName
+        - int commandNumber = 1
+        }
+
+        class FileManager {
+        --Fields--
+        - final FileController controller
+        - final FileExecutor executor
+        }
+    }
+}
+
+@enduml

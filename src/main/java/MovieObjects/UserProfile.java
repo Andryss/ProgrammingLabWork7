@@ -50,7 +50,7 @@ public class UserProfile implements Serializable {
     public String toString() {
         return "UserProfile{" +
                 "name='" + name + '\'' +
-                ", encryptedPassword='" + encryptedPassword + '\'' +
+                ", encryptedPassword='" + encryptedPassword.substring(0, 15) + "...'" +
                 ", id=" + id +
                 '}';
     }

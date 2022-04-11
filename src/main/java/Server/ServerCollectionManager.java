@@ -323,7 +323,9 @@ public class ServerCollectionManager {
     }
 
     public static Hashtable<Integer,Movie> getMovieCollection() {
-        return (Hashtable<Integer, Movie>) movieCollection.clone();
+        Hashtable<Integer,Movie> clone = new Hashtable<>();
+        movieCollection.forEach((k, v) -> clone.put(k, movieCollection.get(k).clone()));
+        return clone;
     }
 
     static void printTables() throws SQLException {

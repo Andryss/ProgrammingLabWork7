@@ -49,7 +49,7 @@ public class Request implements Serializable {
         LOGIN_USER,
         LOGOUT_USER,
         REGISTER_USER,
-        EXECUTE_COMMAND,
+        EXECUTE_COMMAND
     }
 
     @Override
