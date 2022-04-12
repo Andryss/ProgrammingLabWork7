@@ -25,10 +25,8 @@ public class ReplaceIfGreaterCommand extends ElementCommand {
         if (readMovie.compareTo(server.getMovieCollection().get(key)) > 0) {
             try {
                 server.putMovie(key, readMovie);
-            } catch (SQLException e) {
-                throw new CommandException(getCommandName(), "movie with key \"" + key + "\" doesn't exists");
-            } catch (IllegalAccessException e) {
-                //ignore
+            } catch (SQLException | IllegalAccessException e) {
+                throw new CommandException(getCommandName(), e.getMessage());
             }
             if (state == ServerExecutor.ExecuteState.EXECUTE) {
                 server.getResponseBuilder().add("Element greater than the old one has been inserted");

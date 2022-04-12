@@ -13,8 +13,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 /**
- * <p>ServerConnector implements (1) and (3) steps in ServerManager</p>
- * <p>There are some methods to send and receive datagrams</p>
+ * ServerConnector receiving Request and starting Thread which executing this Request
  */
 public class ServerConnector {
     private static DatagramChannel channel;

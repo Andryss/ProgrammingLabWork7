@@ -28,7 +28,7 @@ public class RemoveLowerKeyCommand extends NameableCommand {
                     }
                 });
         if (state == ServerExecutor.ExecuteState.EXECUTE) {
-            server.getResponseBuilder().add("All possible elements with key lower than \"" + key + "\" has been removed");
+            server.getResponseBuilder().add("All your elements with key lower than \"" + key + "\" has been removed");
         }
         return true;
     }

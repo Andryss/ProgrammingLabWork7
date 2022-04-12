@@ -57,29 +57,39 @@ public class ClientController {
         }
     }
 
-    private static final int requiredLoginLength = 3;
     static String readLogin() {
         while (true) {
-            ClientController.print("Enter user login: ");
-            String userLogin = ClientController.readLine().trim();
-            if (userLogin.length() < requiredLoginLength) {
-                ClientController.printlnErr("Login must have at least " +  requiredLoginLength + " characters");
-            } else {
+            print("Enter user login: ");
+            String userLogin = readLine().trim();
+            try {
+                checkLogin(userLogin);
                 return userLogin;
+            } catch (IllegalArgumentException e) {
+                printlnErr(e.getMessage());
             }
         }
     }
+    private static void checkLogin(String login) {
+        if (login.length() < 3) {
+            throw new IllegalArgumentException("Login must have at least 3 characters");
+        }
+    }
 
-    private static final int requiredPasswordLength = 3;
     static String readPassword() {
         while (true) {
-            ClientController.print("Enter user password: ");
-            String userPassword = ClientController.readLine().trim();
-            if (userPassword.length() < requiredPasswordLength) {
-                ClientController.printlnErr("Password must have at least " +  requiredPasswordLength + " characters");
-            } else {
+            print("Enter user password: ");
+            String userPassword = readLine().trim();
+            try {
+                checkPassword(userPassword);
                 return userPassword;
+            } catch (IllegalArgumentException e) {
+                printlnErr(e.getMessage());
             }
+        }
+    }
+    private static void checkPassword(String password) {
+        if (password.length() < 3) {
+            throw new IllegalArgumentException("Password must have at least 3 characters");
         }
     }
 

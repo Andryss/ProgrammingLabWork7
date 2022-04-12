@@ -5,6 +5,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
 
+/**
+ * Class UserProfile contains of main info about user (login + password)
+ */
 public class UserProfile implements Serializable {
     private final String name;
     private final String encryptedPassword;

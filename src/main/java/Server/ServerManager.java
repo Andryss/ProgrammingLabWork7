@@ -7,10 +7,7 @@ import java.net.InetAddress;
 import java.sql.SQLException;
 
 /**
- * <p>ServerManager consist of main server logic:</p>
- * <p>1) Receive Request from client</p>
- * <p>2) Execute commands and build Response</p>
- * <p>3) Send Response to client</p>
+ * ServerManager initialize server and start Thread which receiving requests
  */
 public class ServerManager {
 

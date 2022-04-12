@@ -28,7 +28,7 @@ public class ClearCommand extends NameableCommand {
             }
         }
         if (state == ServerExecutor.ExecuteState.EXECUTE) {
-            server.getResponseBuilder().add("All possible elements deleted");
+            server.getResponseBuilder().add("All your elements deleted");
         }
         return true;
     }

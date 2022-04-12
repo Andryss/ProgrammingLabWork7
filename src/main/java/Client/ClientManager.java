@@ -15,6 +15,11 @@ import java.util.NoSuchElementException;
 
 /**
  * <p>ClientManager consist of main client logic:</p>
+ * <p>1) Connection step</p>
+ * <p>2) Login or register step</p>
+ * <p>3) Execution step</p>
+ *
+ * <p>Execution step consist of:</p>
  * <p>1) Read command from CMD</p>
  * <p>2) Validate command and build Request</p>
  * <p>3) Send Request to the server and get Response</p>

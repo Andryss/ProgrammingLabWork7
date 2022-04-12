@@ -10,7 +10,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 
-
+/**
+ * ServerCollectionManager is the main class which working with database and collections
+ */
 public class ServerCollectionManager {
     private static Connection connection;
     private static Hashtable<Integer, Movie> movieCollection;
@@ -109,7 +111,6 @@ public class ServerCollectionManager {
     }
 
     static void close() {
-        dropTables();
         try {
             connection.close();
         } catch (SQLException e) {
@@ -189,6 +190,8 @@ public class ServerCollectionManager {
         long userID = getUserID(userProfile);
         if (userID == -1) {
             throw new IllegalAccessException("User with name \"" + userProfile.getName() + "\" doesn't exist");
+        } else if (movieCollection.get(key) != null) {
+            throw new IllegalAccessException("Movie with key \"" + key + "\" already exists");
         }
         readWriteLock.lock();
         try {
@@ -315,7 +318,7 @@ public class ServerCollectionManager {
         movie.setLength(String.valueOf(resultSet.getInt("length")));
         movie.setGenre(resultSet.getString("genre").equals("null") ?
                 null : resultSet.getString("genre"));
-        movie.setMpaaRating("mpaa_rating");
+        movie.setMpaaRating(resultSet.getString("mpaa_rating"));
         movie.setScreenwriter(screenwriter);
 
         Integer key = resultSet.getInt("movie_key");

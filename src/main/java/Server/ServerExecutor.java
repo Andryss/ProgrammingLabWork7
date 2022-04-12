@@ -12,10 +12,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * <p>ServerExecutor implements (2) step in ServerManager:</p>
- * <p>1) Get command queue from Request</p>
- * <p>2) Validate it in some times</p>
- * <p>3) Execute commands and make them build Response</p>
+ * ServerExecutor executing Request depending on RequestType and starting Thread which sending server Response
+ *
+ * Also, ServerExecutor monitor authorized users
  */
 public class ServerExecutor {
     private static ExecutorService executorService;

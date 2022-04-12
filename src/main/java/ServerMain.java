@@ -7,7 +7,7 @@ import java.sql.SQLException;
 
 public class ServerMain {
 
-    private static final int port = 52927;
+    private static final int port = 52926;
 
     public static void main(String[] args) {
         try {
