@@ -2,12 +2,11 @@ package Server;
 
 import MovieObjects.*;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.sql.*;
 import java.time.ZonedDateTime;
-import java.util.AbstractMap;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -23,19 +22,34 @@ public class ServerCollectionManager {
 
     private static final String dbHostName = "pg";
     private static final String dbName = "studs";
-    private static final String dbUser = "s335155";
-    private static final String dbPassword = "wpr492";
+    private static String dbUser;
+    private static String dbPassword;
 
     private static final String usersTable = "users_335155";
     private static final String movieTable = "movie_335155";
 
-    public static void initialize() throws ClassNotFoundException, SQLException, FieldException {
+    public static void initialize() throws ClassNotFoundException, SQLException, FieldException, FileNotFoundException {
         Class.forName("org.postgresql.Driver");
+        loadDBPrivates();
         connection = DriverManager.getConnection(String.format("jdbc:postgresql://%s/%s", dbHostName, dbName), dbUser, dbPassword);
         initializeStatements();
         createTables();
         loadCollectionsFromDB();
         printTables();
+    }
+
+    private static void loadDBPrivates() throws FileNotFoundException {
+        try {
+            Scanner scanner = new Scanner(new File(".pgpass"));
+            String[] args = scanner.nextLine().split(":");
+            dbUser = args[3];
+            dbPassword = args[4];
+        } catch (FileNotFoundException e) {
+            throw new FileNotFoundException("File \".pgpass\" not found");
+        } catch (NoSuchElementException e) {
+            throw new NoSuchElementException("File \".pgpass\" has no line");
+        }
+
     }
 
     private static Statement statement;
@@ -86,7 +100,7 @@ public class ServerCollectionManager {
         removeMovieStatement = connection.prepareStatement(String.format("DELETE FROM %s WHERE movie_key=?", movieTable));
     }
 
-    private static void createTables() throws SQLException {
+    static void createTables() throws SQLException {
         statement.execute(String.format("CREATE TABLE IF NOT EXISTS %s (\n" +
                 "user_id BIGSERIAL,\n" +
                 "user_login TEXT PRIMARY KEY,\n" +
@@ -182,6 +196,17 @@ public class ServerCollectionManager {
         }
     }
 
+    static UserProfile removeUser(String userName) throws SQLException {
+        readWriteLock.lock();
+        try {
+            removeUserStatement.setString(1, userName);
+            removeUserStatement.executeUpdate();
+            return userCollection.remove(userName);
+        } finally {
+            readWriteLock.unlock();
+        }
+    }
+
     public static Movie getMovie(Integer key) {
         return movieCollection.get(key).clone();
     }
@@ -270,6 +295,17 @@ public class ServerCollectionManager {
         return movieCollection.remove(key);
     }
 
+    static void removeMovie(Integer key) throws SQLException {
+        readWriteLock.lock();
+        try {
+            removeMovieStatement.setInt(1, key);
+            removeMovieStatement.executeUpdate();
+        } finally {
+            readWriteLock.lock();
+        }
+        movieCollection.remove(key);
+    }
+
     private static void loadCollectionsFromDB() throws SQLException, FieldException {
         ResultSet usersResultSet = statement.executeQuery(String.format("SELECT * FROM %s", usersTable));
         userCollection = new Hashtable<>();
@@ -331,7 +367,7 @@ public class ServerCollectionManager {
         return clone;
     }
 
-    static void printTables() throws SQLException {
+    static void printTables() {
         ServerController.info("Users: " + userCollection.toString());
         ServerController.info("Movies: " + movieCollection.toString());
     }

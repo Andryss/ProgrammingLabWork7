@@ -1,7 +1,14 @@
 package Server;
 
+import MovieObjects.UserProfile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.NoSuchElementException;
+import java.util.Scanner;
 
 /**
  * <p>FileController implements nothing in FileManager</p>
@@ -21,4 +28,69 @@ public class ServerController {
         logger.error("\u001B[31m" + message + "\u001B[0m",error);
     }
 
+    public static void run() {
+        info("Ready for commands (type \"?\" or \"help\" for list of commands)");
+
+        while (true) {
+            try {
+                String[] args = System.console().readLine().split("\\s");
+                info(Arrays.toString(args) + " command");
+
+                switch (args[0]) {
+                    case "?":
+                    case "help":
+                        info("Available commands:\n" +
+                                "exit - shut down server\n" +
+                                "logout <name> - logout user\n" +
+                                "ban <name> - ban and logout user\n" +
+                                "show - print authorized users and collections\n" +
+                                "reg <name> <pass> - register new user\n" +
+                                "remove <key> - remove movie");
+                        break;
+
+                    case "exit":
+                        System.exit(0);
+
+                    case "logout":
+                        ServerExecutor.logoutUser(args[1]);
+                        break;
+
+                    case "ban":
+                        ServerExecutor.logoutUser(args[1]);
+                        try {
+                            ServerCollectionManager.removeUser(args[1]);
+                        } catch (SQLException e) {
+                            error(e.getMessage(), e);
+                        }
+                        break;
+
+                    case "show":
+                        ServerExecutor.printUsers();
+                        ServerCollectionManager.printTables();
+                        break;
+
+                    case "reg":
+                        try {
+                            ServerCollectionManager.registerUser(new UserProfile(args[1], args[2]));
+                        } catch (SQLException e) {
+                            error(e.getMessage(), e);
+                        }
+                        break;
+
+                    case "remove":
+                        try {
+                            ServerCollectionManager.removeMovie(Integer.parseInt(args[1]));
+                        } catch (SQLException | NumberFormatException e) {
+                            error(e.getMessage(), e);
+                        }
+                        break;
+
+                    default:
+                        info("Undefined console command \"" + args[0] + "\"");
+                }
+            } catch (NoSuchElementException | IndexOutOfBoundsException e) {
+                error(e.getMessage(), e);
+            }
+        }
+    }
 }

@@ -28,6 +28,10 @@ public class ClientController {
         return reader.nextLine();
     }
 
+    private static String readPrivateLine() {
+        return String.valueOf(System.console().readPassword());
+    }
+
     public static void println(String line) {
         writer.println(line);
     }
@@ -78,7 +82,7 @@ public class ClientController {
     static String readPassword() {
         while (true) {
             print("Enter user password: ");
-            String userPassword = readLine().trim();
+            String userPassword = readPrivateLine().trim();
             try {
                 checkPassword(userPassword);
                 return userPassword;

@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 /**
  * ServerExecutor executing Request depending on RequestType and starting Thread which sending server Response
@@ -52,12 +53,8 @@ public class ServerExecutor {
 
         ServerController.info("Request executed");
 
-        try {
-            ServerController.info("Authorized users: " + authorizedUsers);
-            ServerCollectionManager.printTables();
-        } catch (SQLException e) {
-            ServerController.error(e.getMessage(), e);
-        }
+        printUsers();
+        ServerCollectionManager.printTables();
     }
 
     private void checkConnectionRequest() {
@@ -94,6 +91,10 @@ public class ServerExecutor {
 
     private void logoutUserRequest() {
         authorizedUsers.stream().filter(u -> u.equals(request.getUserProfile())).forEach(authorizedUsers::remove);
+    }
+
+    static void logoutUser(String userName) {
+        authorizedUsers.removeAll(authorizedUsers.stream().filter(u -> u.getName().equals(userName)).collect(Collectors.toList()));
     }
 
     private void registerUserRequest() {
@@ -169,9 +170,14 @@ public class ServerExecutor {
         }
     }
 
+    static void printUsers() {
+        ServerController.info("Authorized users: " + authorizedUsers);
+    }
+
     public static ExecutorService getService() {
         return executorService;
     }
+    static List<UserProfile> getAuthorizedUsers() {return authorizedUsers;}
 
     /**
      * Enum with two main states of executing command

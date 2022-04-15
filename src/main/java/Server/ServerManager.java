@@ -34,6 +34,7 @@ public class ServerManager {
                 ServerController.error(e.getMessage(), e);
             }
         }, "ReceivingThread").start();
+        new Thread(ServerController::run, "ConsoleThread").start();
     }
 
     private static void initializations(int port) throws IOException, FieldException, SQLException, ClassNotFoundException {
