@@ -1,5 +1,6 @@
 package Commands;
 
+import Client.RequestBuilder;
 import MovieObjects.Movie;
 import Server.ServerExecutor;
 import Server.ServerINFO;
@@ -47,5 +48,12 @@ public class FilterByMpaaRatingCommand extends NameableCommand {
         } catch (IllegalArgumentException e) {
             throw new BadArgumentsFormatException(getCommandName(), "value must be one of: " + Arrays.toString(Movie.MpaaRating.values()));
         }
+    }
+
+    @Override
+    public void buildRequest() throws CommandException {
+        FilterByMpaaRatingCommand command = new FilterByMpaaRatingCommand(getCommandName());
+        command.mpaaRating = mpaaRating;
+        RequestBuilder.add(command);
     }
 }

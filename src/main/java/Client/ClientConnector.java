@@ -1,6 +1,5 @@
 package Client;
 
-import Commands.HelpCommand;
 import Server.ConnectorHelper;
 import Server.Response;
 
@@ -16,7 +15,7 @@ public class ClientConnector {
     private static DatagramSocket socket;
     private static InetAddress serverAddress;
     private static int serverPort;
-    private static final ByteBuffer dataBuffer = ByteBuffer.allocate(12000);
+    private static final ByteBuffer dataBuffer = ByteBuffer.allocate(60_000);
 
     private ClientConnector() {}
 

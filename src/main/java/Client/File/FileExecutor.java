@@ -70,7 +70,11 @@ public class FileExecutor {
         } catch (NoSuchElementException e) {
             throw new CommandException(commandName, "File ended before command \"" + commandName + "\" completed");
         }
-        command.buildRequest();
+        try {
+            command.buildRequest();
+        } catch (CommandException e) {
+            throw new CommandException(commandName, e.getReason());
+        }
     }
 
     public FileExecutor getCaller() {

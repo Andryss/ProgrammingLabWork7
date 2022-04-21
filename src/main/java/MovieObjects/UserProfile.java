@@ -13,9 +13,9 @@ public class UserProfile implements Serializable {
     private final String encryptedPassword;
     private transient long id;
 
-    public UserProfile(String name, String password) {
-        this.name = name;
-        this.encryptedPassword = encryptPassword(password);
+    public UserProfile(String name, String password) throws IllegalArgumentException {
+        this.name = checkLogin(name);
+        this.encryptedPassword = encryptPassword(checkPassword(password));
     }
 
     public UserProfile(String name, String encryptedPassword, long id) {
@@ -24,10 +24,32 @@ public class UserProfile implements Serializable {
         this.id = id;
     }
 
+    private static String checkLogin(String login) throws IllegalArgumentException {
+        if (login.length() < 3) {
+            throw new IllegalArgumentException("Login must have at least 3 characters");
+        }
+        if (login.length() > 20) {
+            throw new IllegalArgumentException("Login must have less than 20 characters");
+        }
+        if (!login.chars().allMatch(Character::isAlphabetic)) {
+            throw new IllegalArgumentException("Login must contains of only alphabetic characters");
+        }
+        return login;
+    }
+    private static String checkPassword(String password) throws IllegalArgumentException {
+        if (password.length() < 3) {
+            throw new IllegalArgumentException("Password must have at least 3 characters");
+        }
+        if (password.length() > 20) {
+            throw new IllegalArgumentException("Login must have less than 20 characters");
+        }
+        return password;
+    }
+
     private static String encryptPassword(String userPassword) {
         try {
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-384");
-            byte[] bytes = messageDigest.digest(userPassword.getBytes());
+            byte[] bytes = messageDigest.digest(("~;&a$2%" + userPassword).getBytes());
             StringBuilder stringBuilder = new StringBuilder();
             for (byte i : bytes) {
                 stringBuilder.append(Integer.toString((i & 0xff) + 0x100, 16).substring(1));

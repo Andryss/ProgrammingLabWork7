@@ -1,5 +1,6 @@
 package Commands;
 
+import Client.RequestBuilder;
 import Server.ServerExecutor;
 import Server.ServerINFO;
 
@@ -37,5 +38,12 @@ public class ReplaceIfGreaterCommand extends ElementCommand {
             }
         }
         return true;
+    }
+
+    @Override
+    public void buildRequest() throws CommandException {
+        ReplaceIfGreaterCommand command = new ReplaceIfGreaterCommand(getCommandName(), reader);
+        command.key = key; command.readMovie = readMovie;
+        RequestBuilder.add(command);
     }
 }

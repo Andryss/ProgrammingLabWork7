@@ -10,7 +10,7 @@ import java.util.Properties;
 
 public class ServerMain {
 
-    private static final int port = 52926;
+    private static final int port = 52927;
 
     public static void main(String[] args) {
         try {

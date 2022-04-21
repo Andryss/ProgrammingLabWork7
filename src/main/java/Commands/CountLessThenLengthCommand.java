@@ -1,5 +1,6 @@
 package Commands;
 
+import Client.RequestBuilder;
 import Server.ServerExecutor;
 import Server.ServerINFO;
 
@@ -38,5 +39,12 @@ public class CountLessThenLengthCommand extends NameableCommand {
         } catch (NumberFormatException e) {
             throw new BadArgumentsFormatException(getCommandName(), "value must be integer");
         }
+    }
+
+    @Override
+    public void buildRequest() throws CommandException {
+        CountLessThenLengthCommand command = new CountLessThenLengthCommand(getCommandName());
+        command.length = length;
+        RequestBuilder.add(command);
     }
 }

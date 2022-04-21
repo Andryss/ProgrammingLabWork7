@@ -89,7 +89,13 @@ public class ClientManager {
     }
 
     private static boolean lrstep(Request.RequestType requestType, Response.ResponseType responseTypeSuccess, Response.ResponseType responseTypeFail) {
-        UserProfile userProfile = new UserProfile(ClientController.readLogin(),ClientController.readPassword());
+        UserProfile userProfile;
+        try {
+            userProfile = new UserProfile(ClientController.readLogin(),ClientController.readPassword());
+        } catch (IllegalArgumentException e) {
+            ClientController.printlnErr(e.getMessage());
+            return false;
+        }
         RequestBuilder.setUserProfile(userProfile);
         RequestBuilder.createNewRequest(requestType);
         try {

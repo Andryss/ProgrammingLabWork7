@@ -1,5 +1,6 @@
 package Commands;
 
+import Client.RequestBuilder;
 import Server.ServerExecutor;
 import Server.ServerINFO;
 
@@ -43,5 +44,12 @@ public class RemoveLowerKeyCommand extends NameableCommand {
         } catch (NumberFormatException e) {
             throw new BadArgumentsFormatException(getCommandName(), "integer");
         }
+    }
+
+    @Override
+    public void buildRequest() throws CommandException {
+        RemoveLowerKeyCommand command = new RemoveLowerKeyCommand(getCommandName());
+        command.key = key;
+        RequestBuilder.add(command);
     }
 }

@@ -19,7 +19,7 @@ import java.util.Set;
 public class ServerConnector {
     private static DatagramChannel channel;
     private static Selector selector;
-    private static final ByteBuffer dataBuffer = ByteBuffer.allocate(12000);
+    private static final ByteBuffer dataBuffer = ByteBuffer.allocate(60_000);
 
     private ServerConnector() {}
 
@@ -76,12 +76,12 @@ public class ServerConnector {
     }
 
     static void sendToClient(SocketAddress client, Response response) {
-        ServerController.info("Sending to client " + client.toString() + " starts");
 
         synchronized (dataBuffer) {
             try {
                 dataBuffer.put(ConnectorHelper.objectToBuffer(response));
                 dataBuffer.flip();
+                ServerController.info("Sending " + dataBuffer.limit() + " bytes to client " + client.toString() + " starts");
                 channel.send(dataBuffer, client);
                 dataBuffer.clear();
             } catch (IOException e) {

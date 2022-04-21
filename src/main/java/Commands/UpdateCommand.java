@@ -1,5 +1,6 @@
 package Commands;
 
+import Client.RequestBuilder;
 import Server.ServerExecutor;
 import Server.ServerINFO;
 
@@ -31,5 +32,12 @@ public class UpdateCommand extends ElementCommand {
             server.getResponseBuilder().add("The movie has been updated");
         }
         return true;
+    }
+
+    @Override
+    public void buildRequest() throws CommandException {
+        UpdateCommand command = new UpdateCommand(getCommandName(), reader);
+        command.key = key; command.readMovie = readMovie;
+        RequestBuilder.add(command);
     }
 }

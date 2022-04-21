@@ -62,39 +62,13 @@ public class ClientController {
     }
 
     static String readLogin() {
-        while (true) {
-            print("Enter user login: ");
-            String userLogin = readLine().trim();
-            try {
-                checkLogin(userLogin);
-                return userLogin;
-            } catch (IllegalArgumentException e) {
-                printlnErr(e.getMessage());
-            }
-        }
-    }
-    private static void checkLogin(String login) {
-        if (login.length() < 3) {
-            throw new IllegalArgumentException("Login must have at least 3 characters");
-        }
+        print("Enter user login: ");
+        return readLine().trim();
     }
 
     static String readPassword() {
-        while (true) {
-            print("Enter user password: ");
-            String userPassword = readPrivateLine().trim();
-            try {
-                checkPassword(userPassword);
-                return userPassword;
-            } catch (IllegalArgumentException e) {
-                printlnErr(e.getMessage());
-            }
-        }
-    }
-    private static void checkPassword(String password) {
-        if (password.length() < 3) {
-            throw new IllegalArgumentException("Password must have at least 3 characters");
-        }
+        print("Enter user password: ");
+        return readPrivateLine().trim();
     }
 
     public static Scanner getReader() {

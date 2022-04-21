@@ -60,9 +60,11 @@ public class ServerINFO {
             return movieCollection.get(key);
         }
         @Override
-        public Movie putMovie(Integer key, Movie movie) throws SQLException {
+        public Movie putMovie(Integer key, Movie movie) throws SQLException, IllegalAccessException {
             if (movieCollection.containsKey(key)) {
                 throw new SQLException("Movie already exists");
+            } else if (movieCollection.size() >= 10) {
+                throw new IllegalAccessException("Collection limit (10) exceeded");
             }
             movie.setOwner(userProfile.getName());
             return movieCollection.put(key, movie);

@@ -4,11 +4,9 @@ import MovieObjects.UserProfile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
-import java.util.Scanner;
 
 /**
  * <p>FileController implements nothing in FileManager</p>
@@ -45,7 +43,8 @@ public class ServerController {
                                 "ban <name> - ban and logout user\n" +
                                 "show - print authorized users and collections\n" +
                                 "reg <name> <pass> - register new user\n" +
-                                "remove <key> - remove movie");
+                                "remove <key> - remove movie\n" +
+                                "dropcreate - drop and create tables");
                         break;
 
                     case "exit":
@@ -85,11 +84,23 @@ public class ServerController {
                         }
                         break;
 
+                    case "dropcreate":
+                        try {
+                            ServerCollectionManager.dropTables();
+                            ServerCollectionManager.createTables();
+                        } catch (SQLException e) {
+                            error(e.getMessage(), e);
+                        }
+                        break;
+
                     default:
                         info("Undefined console command \"" + args[0] + "\"");
                 }
             } catch (NoSuchElementException | IndexOutOfBoundsException e) {
                 error(e.getMessage(), e);
+            } catch (NullPointerException e) {
+                error("Found EOF", e);
+                break;
             }
         }
     }

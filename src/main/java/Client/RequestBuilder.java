@@ -1,6 +1,7 @@
 package Client;
 
 import Commands.Command;
+import Commands.CommandException;
 import Commands.NameableCommand;
 import MovieObjects.UserProfile;
 
@@ -25,7 +26,10 @@ public class RequestBuilder {
         RequestBuilder.userProfile = userProfile;
     }
 
-    public static void add(Command command) {
+    public static void add(Command command) throws CommandException {
+        if (request.getCommandQueue().size() > 20) {
+            throw new CommandException("", "ERROR: Possible limit of command queue (20) exceeded");
+        }
         request.addCommand(command);
     }
 

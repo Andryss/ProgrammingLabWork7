@@ -26,7 +26,7 @@ public class FileManager {
                 executor.parseCommand(controller.readLine());
             } catch (CommandException e) {
                 throw new CommandException(e.getCommand(), "file \"" + controller.getFileName() + "\" "
-                        + "command " + executor.getCommandNumber() + " \"" + e.getCommand() + "\" - " + e.getMessage());
+                        + "command " + (executor.getCommandNumber() - 1) + " \"" + e.getCommand() + "\" - " + e.getMessage());
             }
         }
     }

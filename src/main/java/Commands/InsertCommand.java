@@ -1,5 +1,6 @@
 package Commands;
 
+import Client.RequestBuilder;
 import Server.ServerExecutor;
 import Server.ServerINFO;
 
@@ -31,5 +32,12 @@ public class InsertCommand extends ElementCommand {
             server.getResponseBuilder().add("*put new element in the collection*");
         }
         return false;
+    }
+
+    @Override
+    public void buildRequest() throws CommandException {
+        InsertCommand command = new InsertCommand(getCommandName(), reader);
+        command.key = key; command.readMovie = readMovie;
+        RequestBuilder.add(command);
     }
 }

@@ -104,23 +104,23 @@ public class ServerCollectionManager {
         statement.execute(String.format("CREATE TABLE IF NOT EXISTS %s (\n" +
                 "user_id BIGSERIAL,\n" +
                 "user_login TEXT PRIMARY KEY,\n" +
-                "user_password TEXT\n" +
+                "user_password TEXT NOT NULL\n" +
                 ")", usersTable));
         statement.execute(String.format("CREATE TABLE If NOT EXISTS %s (\n" +
                 "movie_id bigserial,\n" +
-                "user_id bigint,\n" +
-                "movie_key INT PRIMARY KEY, \n" +
-                "name TEXT,\n" +
-                "coordinates_x REAL,\n" +
-                "coordinates_y REAL,\n" +
-                "creation_date TEXT,\n" +
-                "oscars_count BIGINT,\n" +
-                "length INT,\n" +
-                "genre TEXT,\n" +
-                "mpaa_rating TEXT,\n" +
-                "screenwriter_name TEXT,\n" +
-                "screenwriter_birthday TEXT,\n" +
-                "screenwriter_hair_color TEXT\n" +
+                "user_id bigint NOT NULL,\n" +
+                "movie_key INT PRIMARY KEY,\n" +
+                "name TEXT NOT NULL,\n" +
+                "coordinates_x REAL NOT NULL,\n" +
+                "coordinates_y REAL NOT NULL,\n" +
+                "creation_date TEXT NOT NULL,\n" +
+                "oscars_count BIGINT CHECK (oscars_count > 0),\n" +
+                "length INT CHECK (oscars_count > 0),\n" +
+                "genre TEXT NULL,\n" +
+                "mpaa_rating TEXT NOT NULL,\n" +
+                "screenwriter_name TEXT NOT NULL,\n" +
+                "screenwriter_birthday TEXT NULL,\n" +
+                "screenwriter_hair_color TEXT NULL\n" +
                 ")", movieTable));
     }
 
@@ -217,6 +217,8 @@ public class ServerCollectionManager {
             throw new IllegalAccessException("User with name \"" + userProfile.getName() + "\" doesn't exist");
         } else if (movieCollection.get(key) != null) {
             throw new IllegalAccessException("Movie with key \"" + key + "\" already exists");
+        } else if (movieCollection.size() >= 10) {
+            throw new IllegalAccessException("Collection limit (10) exceeded");
         }
         readWriteLock.lock();
         try {
@@ -362,9 +364,7 @@ public class ServerCollectionManager {
     }
 
     public static Hashtable<Integer,Movie> getMovieCollection() {
-        Hashtable<Integer,Movie> clone = new Hashtable<>();
-        movieCollection.forEach((k, v) -> clone.put(k, movieCollection.get(k).clone()));
-        return clone;
+        return new Hashtable<>(movieCollection);
     }
 
     static void printTables() {
