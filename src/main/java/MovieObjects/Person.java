@@ -36,6 +36,9 @@ public class Person implements Serializable, Cloneable {
         if (name == null) {
             throw new FieldException(null, "Field can't be null, String can't be empty");
         }
+        if (name.length() > 20) {
+            throw new FieldException(name, "Name must have less than 20 characters");
+        }
         this.name = name;
     }
 

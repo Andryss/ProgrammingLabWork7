@@ -19,7 +19,7 @@ import java.util.Set;
 public class ServerConnector {
     private static DatagramChannel channel;
     private static Selector selector;
-    private static final ByteBuffer dataBuffer = ByteBuffer.allocate(60_000);
+    private static final ByteBuffer dataBuffer = ByteBuffer.allocate(30_000);
 
     private ServerConnector() {}
 

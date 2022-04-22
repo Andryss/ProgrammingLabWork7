@@ -2,7 +2,6 @@ package Server;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Response class contains all information the server can send to client in one class
@@ -18,11 +17,10 @@ public class Response implements Serializable {
     void addMessage(String message) {
         if (this.message == null) {
             this.message = new ArrayList<>();
-            this.message.add(message);
         } else {
             this.message.add("\n");
-            this.message.add(message);
         }
+        this.message.add(message.intern());
     }
 
     void setResponseType(ResponseType responseType) {

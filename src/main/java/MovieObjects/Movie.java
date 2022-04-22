@@ -56,22 +56,9 @@ public class Movie implements Comparable<Movie>, Serializable, Cloneable {
      */
     private Person screenwriter;
 
-    static long global_id = 1;
-
-    /**
-     * Parse global id from string
-     * @throws FieldException if string is incorrect
-     */
-    static void loadGlobalId(String globalIdString) throws FieldException {
-        try {
-            global_id = Long.parseLong(globalIdString);
-        } catch (NumberFormatException e) {
-            throw new FieldException(globalIdString, "Value must be long");
-        }
-    }
 
     public Movie() {
-        this(Movie.global_id++, ZonedDateTime.now());
+        this(0, ZonedDateTime.now());
     }
 
     public Movie(long id, java.time.ZonedDateTime creationDate) {
@@ -91,6 +78,9 @@ public class Movie implements Comparable<Movie>, Serializable, Cloneable {
     public void setName(String name) throws FieldException {
         if (name == null || name.equals("null")) {
             throw new FieldException(null, "Field can't be null, String can't be empty");
+        }
+        if (name.length() > 20) {
+            throw new FieldException(name, "Name must have less than 20 characters");
         }
         this.name = name;
     }

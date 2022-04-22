@@ -292,7 +292,7 @@ public class ServerCollectionManager {
             removeMovieStatement.setInt(1, key);
             removeMovieStatement.executeUpdate();
         } finally {
-            readWriteLock.lock();
+            readWriteLock.unlock();
         }
         return movieCollection.remove(key);
     }
@@ -303,7 +303,7 @@ public class ServerCollectionManager {
             removeMovieStatement.setInt(1, key);
             removeMovieStatement.executeUpdate();
         } finally {
-            readWriteLock.lock();
+            readWriteLock.unlock();
         }
         movieCollection.remove(key);
     }

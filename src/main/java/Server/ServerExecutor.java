@@ -8,6 +8,7 @@ import MovieObjects.UserProfile;
 import java.net.SocketAddress;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
  */
 public class ServerExecutor {
     private static ExecutorService executorService;
-    private static final List<UserProfile> authorizedUsers = Collections.synchronizedList(new ArrayList<>());
+    private static final List<UserProfile> authorizedUsers = new CopyOnWriteArrayList<>();
 
     private final SocketAddress client;
     private final Request request;
