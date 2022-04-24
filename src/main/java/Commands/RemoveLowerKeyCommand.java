@@ -24,7 +24,7 @@ public class RemoveLowerKeyCommand extends NameableCommand {
                 .forEach(key -> {
                     try {
                         server.removeMovie(key);
-                    } catch (SQLException | IllegalAccessException e) {
+                    } catch (IllegalAccessException e) {
                         //ignore
                     }
                 });

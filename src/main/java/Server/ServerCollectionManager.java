@@ -59,6 +59,7 @@ public class ServerCollectionManager {
     private static PreparedStatement insertMovieStatement;
     private static PreparedStatement updateMovieStatement;
     private static PreparedStatement removeMovieStatement;
+    private static PreparedStatement removeAllMoviesStatement;
 
     private static void initializeStatements() throws SQLException {
         statement = connection.createStatement();
@@ -98,6 +99,7 @@ public class ServerCollectionManager {
                 ")=(?,?,?,?,?,?,?,?,?,?,?) WHERE " +
                 "movie_key=?", movieTable));
         removeMovieStatement = connection.prepareStatement(String.format("DELETE FROM %s WHERE movie_key=?", movieTable));
+        removeAllMoviesStatement = connection.prepareStatement(String.format("DELETE FROM %s WHERE user_id=?", movieTable));
     }
 
     static void createTables() throws SQLException {
@@ -159,7 +161,7 @@ public class ServerCollectionManager {
         return user.map(Map.Entry::getKey).orElse(null);
     }
 
-    public static long registerUser(UserProfile userProfile) throws SQLException {
+    public static long registerUser(UserProfile userProfile) {
         if (getUserID(userProfile) == -1) {
             readWriteLock.lock();
             try {
@@ -175,6 +177,8 @@ public class ServerCollectionManager {
                         return userID;
                     }
                 }
+            } catch (SQLException e) {
+                ServerController.error(e.getMessage(), e);
             } finally {
                 readWriteLock.unlock();
             }
@@ -182,7 +186,7 @@ public class ServerCollectionManager {
         return -1;
     }
 
-    public static UserProfile removeUser(UserProfile userProfile) throws SQLException {
+    public static UserProfile removeUser(UserProfile userProfile) {
         readWriteLock.lock();
         try {
             if (!userCollection.get(userProfile.getName()).getPassword().equals(userProfile.getPassword())) {
@@ -191,17 +195,22 @@ public class ServerCollectionManager {
             removeUserStatement.setString(1, userProfile.getName());
             removeUserStatement.executeUpdate();
             return userCollection.remove(userProfile.getName());
+        } catch (SQLException e) {
+            ServerController.error(e.getMessage(), e);
+            return null;
         } finally {
             readWriteLock.unlock();
         }
     }
 
-    static UserProfile removeUser(String userName) throws SQLException {
+    static void removeUser(String userName) {
         readWriteLock.lock();
         try {
             removeUserStatement.setString(1, userName);
             removeUserStatement.executeUpdate();
-            return userCollection.remove(userName);
+            userCollection.remove(userName);
+        } catch (SQLException e) {
+            ServerController.error(e.getMessage(), e);
         } finally {
             readWriteLock.unlock();
         }
@@ -211,7 +220,7 @@ public class ServerCollectionManager {
         return movieCollection.get(key).clone();
     }
 
-    public static Movie putMovie(Integer key, Movie movie, UserProfile userProfile) throws SQLException, IllegalAccessException {
+    public static Movie putMovie(Integer key, Movie movie, UserProfile userProfile) throws IllegalAccessException {
         long userID = getUserID(userProfile);
         if (userID == -1) {
             throw new IllegalAccessException("User with name \"" + userProfile.getName() + "\" doesn't exist");
@@ -237,13 +246,16 @@ public class ServerCollectionManager {
             insertMovieStatement.setString(12, movie.getScreenwriter().getBirthdayString());
             insertMovieStatement.setString(13, (movie.getScreenwriter().getHairColor() == null ?
                     "null" : movie.getScreenwriter().getHairColor().toString()));
-
             insertMovieStatement.executeUpdate();
+
+            movie.setOwner(userProfile.getName());
+            return movieCollection.put(key, movie);
+        } catch (SQLException e) {
+            ServerController.error(e.getMessage(), e);
+            return null;
         } finally {
             readWriteLock.unlock();
         }
-        movie.setOwner(userProfile.getName());
-        return movieCollection.put(key, movie);
     }
 
     private static void checkPermission(Integer key, UserProfile userProfile) throws IllegalAccessException {
@@ -259,7 +271,7 @@ public class ServerCollectionManager {
         }
     }
 
-    public static Movie updateMovie(Integer key, Movie movie, UserProfile userProfile) throws SQLException, IllegalAccessException {
+    public static Movie updateMovie(Integer key, Movie movie, UserProfile userProfile) throws IllegalAccessException {
         checkPermission(key, userProfile);
         readWriteLock.lock();
         try {
@@ -278,34 +290,63 @@ public class ServerCollectionManager {
                     "null" : movie.getScreenwriter().getHairColor().toString()));
             updateMovieStatement.setInt(12, key);
             updateMovieStatement.executeUpdate();
+
+            movie.setOwner(movieCollection.get(key).getOwner());
+            return movieCollection.put(key, movie);
+        } catch (SQLException e) {
+            ServerController.error(e.getMessage(), e);
+            return null;
         } finally {
             readWriteLock.unlock();
         }
-        movie.setOwner(movieCollection.get(key).getOwner());
-        return movieCollection.put(key, movie);
     }
 
-    public static Movie removeMovie(Integer key, UserProfile userProfile) throws SQLException, IllegalAccessException {
+    public static Movie removeMovie(Integer key, UserProfile userProfile) throws IllegalAccessException {
         checkPermission(key, userProfile);
         readWriteLock.lock();
         try {
             removeMovieStatement.setInt(1, key);
             removeMovieStatement.executeUpdate();
+            return movieCollection.remove(key);
+        } catch (SQLException e) {
+            ServerController.error(e.getMessage(), e);
+            return null;
         } finally {
             readWriteLock.unlock();
         }
-        return movieCollection.remove(key);
     }
 
-    static void removeMovie(Integer key) throws SQLException {
+    static void removeMovie(Integer key) {
         readWriteLock.lock();
         try {
             removeMovieStatement.setInt(1, key);
             removeMovieStatement.executeUpdate();
+            movieCollection.remove(key);
+        } catch (SQLException e) {
+            ServerController.error(e.getMessage(), e);
         } finally {
             readWriteLock.unlock();
         }
-        movieCollection.remove(key);
+    }
+
+    public static void removeAllMovies(UserProfile userProfile) throws IllegalAccessException {
+        long id = getUserID(userProfile);
+        if (id == -1) {
+            throw new IllegalAccessException("Current user doesn't exist");
+        }
+        readWriteLock.lock();
+        try {
+            removeAllMoviesStatement.setLong(1, id);
+            removeAllMoviesStatement.executeUpdate();
+            ((Hashtable<Integer,Movie>) movieCollection.clone()).entrySet().stream()
+                    .filter(e -> e.getValue().getOwner().equals(userProfile.getName()))
+                    .map(Map.Entry::getKey)
+                    .forEach(movieCollection::remove);
+        } catch (SQLException e) {
+            ServerController.error(e.getMessage(), e);
+        } finally {
+            readWriteLock.unlock();
+        }
     }
 
     private static void loadCollectionsFromDB() throws SQLException, FieldException {
@@ -364,7 +405,9 @@ public class ServerCollectionManager {
     }
 
     public static Hashtable<Integer,Movie> getMovieCollection() {
-        return new Hashtable<>(movieCollection);
+        Hashtable<Integer,Movie> clone = new Hashtable<>();
+        ((Hashtable<Integer, Movie>) movieCollection.clone()).forEach((key, value) -> clone.put(key, value.clone()));
+        return clone;
     }
 
     static void printTables() {

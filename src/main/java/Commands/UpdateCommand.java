@@ -25,7 +25,7 @@ public class UpdateCommand extends ElementCommand {
     public boolean execute(ServerExecutor.ExecuteState state, ServerINFO server) throws CommandException {
         try {
             server.updateMovie(key, readMovie);
-        } catch (SQLException | IllegalAccessException e) {
+        } catch (IllegalAccessException e) {
             throw new CommandException(getCommandName(), e.getMessage());
         }
         if (state == ServerExecutor.ExecuteState.EXECUTE) {

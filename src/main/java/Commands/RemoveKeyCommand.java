@@ -24,8 +24,8 @@ public class RemoveKeyCommand extends NameableCommand {
             if (state == ServerExecutor.ExecuteState.EXECUTE) {
                 server.getResponseBuilder().add("Element with key \"" + key + "\" has been removed");
             }
-        } catch (SQLException | IllegalAccessException e) {
-            server.getResponseBuilder().add("Nothing has been removed");
+        } catch (IllegalAccessException e) {
+            server.getResponseBuilder().add("Nothing has been removed (" + e.getMessage() + ")");
         }
         return true;
     }

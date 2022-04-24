@@ -5,6 +5,7 @@ import MovieObjects.UserProfile;
 
 import java.sql.SQLException;
 import java.util.Hashtable;
+import java.util.Map;
 
 /**
  * Class ServerINFO contains of all the information, that can be useful for commands (collection, name of file etc.)
@@ -23,16 +24,20 @@ public class ServerINFO {
         return ServerCollectionManager.getMovie(key);
     }
 
-    public Movie putMovie(Integer key, Movie movie) throws SQLException, IllegalAccessException {
+    public Movie putMovie(Integer key, Movie movie) throws IllegalAccessException {
         return ServerCollectionManager.putMovie(key, movie, userProfile);
     }
 
-    public Movie updateMovie(Integer key, Movie movie) throws SQLException, IllegalAccessException {
+    public Movie updateMovie(Integer key, Movie movie) throws IllegalAccessException {
         return ServerCollectionManager.updateMovie(key, movie, userProfile);
     }
 
-    public Movie removeMovie(Integer key) throws SQLException, IllegalAccessException {
+    public Movie removeMovie(Integer key) throws IllegalAccessException {
         return ServerCollectionManager.removeMovie(key, userProfile);
+    }
+
+    public void removeAllMovies() throws IllegalAccessException {
+        ServerCollectionManager.removeAllMovies(userProfile);
     }
 
     public Hashtable<Integer,Movie> getMovieCollection() {
@@ -60,9 +65,9 @@ public class ServerINFO {
             return movieCollection.get(key);
         }
         @Override
-        public Movie putMovie(Integer key, Movie movie) throws SQLException, IllegalAccessException {
+        public Movie putMovie(Integer key, Movie movie) throws IllegalAccessException {
             if (movieCollection.containsKey(key)) {
-                throw new SQLException("Movie already exists");
+                throw new IllegalAccessException("Movie already exists");
             } else if (movieCollection.size() >= 10) {
                 throw new IllegalAccessException("Collection limit (10) exceeded");
             }
@@ -70,7 +75,7 @@ public class ServerINFO {
             return movieCollection.put(key, movie);
         }
         @Override
-        public Movie updateMovie(Integer key, Movie movie) throws SQLException, IllegalAccessException {
+        public Movie updateMovie(Integer key, Movie movie) throws IllegalAccessException {
             if (movieCollection.get(key) != null) {
                 throw new IllegalAccessException("Movie with key \"" + key + "\" doesn't exist");
             }
@@ -88,6 +93,13 @@ public class ServerINFO {
                 throw new IllegalAccessException("User \"" + userProfile.getName() + "\" doesn't have permission to remove movie with key \"" + key + "\"");
             }
             return movieCollection.remove(key);
+        }
+        @Override
+        public void removeAllMovies() {
+            movieCollection.entrySet().stream()
+                    .filter(e -> e.getValue().getOwner().equals(userProfile.getName()))
+                    .map(Map.Entry::getKey)
+                    .forEach(movieCollection::remove);
         }
     }
 }

@@ -26,7 +26,7 @@ public class ReplaceIfGreaterCommand extends ElementCommand {
         if (readMovie.compareTo(server.getMovieCollection().get(key)) > 0) {
             try {
                 server.putMovie(key, readMovie);
-            } catch (SQLException | IllegalAccessException e) {
+            } catch (IllegalAccessException e) {
                 throw new CommandException(getCommandName(), e.getMessage());
             }
             if (state == ServerExecutor.ExecuteState.EXECUTE) {
