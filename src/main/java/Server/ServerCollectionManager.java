@@ -405,9 +405,7 @@ public class ServerCollectionManager {
     }
 
     public static Hashtable<Integer,Movie> getMovieCollection() {
-        Hashtable<Integer,Movie> clone = new Hashtable<>();
-        ((Hashtable<Integer, Movie>) movieCollection.clone()).forEach((key, value) -> clone.put(key, value.clone()));
-        return clone;
+        return (Hashtable<Integer, Movie>) movieCollection.clone();
     }
 
     static void printTables() {

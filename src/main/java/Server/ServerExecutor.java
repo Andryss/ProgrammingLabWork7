@@ -6,7 +6,6 @@ import Commands.CommandException;
 import MovieObjects.UserProfile;
 
 import java.net.SocketAddress;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -100,29 +99,20 @@ public class ServerExecutor {
 
     private void registerUserRequest() {
         ResponseBuilder responseBuilder;
-        try {
-            long newUserID = ServerCollectionManager.registerUser(request.getUserProfile());
-            if (newUserID == -1) {
-                responseBuilder = ResponseBuilder.createNewResponse(
-                        Response.ResponseType.REGISTER_FAILED,
-                        "User is already registered"
-                );
-            } else {
-                authorizedUsers.add(request.getUserProfile());
-                responseBuilder = ResponseBuilder.createNewResponse(
-                        Response.ResponseType.REGISTER_SUCCESSFUL,
-                        "New user successfully registered"
-                );
-            }
-        } catch (SQLException throwables) {
-            ServerController.error("Error while registering new user: ", throwables);
+        long newUserID = ServerCollectionManager.registerUser(request.getUserProfile());
+        if (newUserID == -1) {
             responseBuilder = ResponseBuilder.createNewResponse(
                     Response.ResponseType.REGISTER_FAILED,
-                    "Some server error, try again later"
+                    "User is already registered"
+            );
+        } else {
+            authorizedUsers.add(request.getUserProfile());
+            responseBuilder = ResponseBuilder.createNewResponse(
+                    Response.ResponseType.REGISTER_SUCCESSFUL,
+                    "New user successfully registered"
             );
         }
-        ResponseBuilder finalResponseBuilder = responseBuilder;
-        new Thread(() -> ServerConnector.sendToClient(client, finalResponseBuilder.getResponse()), "SendingRUThread").start();
+        new Thread(() -> ServerConnector.sendToClient(client, responseBuilder.getResponse()), "SendingRUThread").start();
     }
 
     private void executeCommandRequest() {

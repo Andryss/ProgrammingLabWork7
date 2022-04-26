@@ -1,7 +1,7 @@
 package Server;
 
 /**
- * Global class, which build one response to client (especially for not sending one Response through all methods)
+ * Global class, which build response to client
  */
 public class ResponseBuilder {
     private final Response response;

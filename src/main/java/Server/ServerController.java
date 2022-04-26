@@ -9,8 +9,7 @@ import java.util.Arrays;
 import java.util.NoSuchElementException;
 
 /**
- * <p>FileController implements nothing in FileManager</p>
- * <p>The main idea of this class is just logging into file and terminal</p>
+ * ServerController logging into file and terminal, implements simple console commands for server
  */
 public class ServerController {
 
@@ -56,11 +55,7 @@ public class ServerController {
 
                     case "ban":
                         ServerExecutor.logoutUser(args[1]);
-                        try {
-                            ServerCollectionManager.removeUser(args[1]);
-                        } catch (SQLException e) {
-                            error(e.getMessage(), e);
-                        }
+                        ServerCollectionManager.removeUser(args[1]);
                         break;
 
                     case "show":
@@ -69,17 +64,13 @@ public class ServerController {
                         break;
 
                     case "reg":
-                        try {
-                            ServerCollectionManager.registerUser(new UserProfile(args[1], args[2]));
-                        } catch (SQLException e) {
-                            error(e.getMessage(), e);
-                        }
+                        ServerCollectionManager.registerUser(new UserProfile(args[1], args[2]));
                         break;
 
                     case "remove":
                         try {
                             ServerCollectionManager.removeMovie(Integer.parseInt(args[1]));
-                        } catch (SQLException | NumberFormatException e) {
+                        } catch (NumberFormatException e) {
                             error(e.getMessage(), e);
                         }
                         break;
@@ -96,8 +87,8 @@ public class ServerController {
                     default:
                         info("Undefined console command \"" + args[0] + "\"");
                 }
-            } catch (NoSuchElementException | IndexOutOfBoundsException e) {
-                error(e.getMessage(), e);
+            } catch (IndexOutOfBoundsException e) {
+                error("Incorrect amount of arguments: " + e.getMessage(), e);
             } catch (NullPointerException e) {
                 error("Found EOF", e);
                 break;

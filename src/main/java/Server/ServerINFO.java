@@ -3,7 +3,6 @@ package Server;
 import MovieObjects.Movie;
 import MovieObjects.UserProfile;
 
-import java.sql.SQLException;
 import java.util.Hashtable;
 import java.util.Map;
 

@@ -7,7 +7,7 @@ import java.net.InetAddress;
 import java.sql.SQLException;
 
 /**
- * ServerManager initialize server and start Thread which receiving requests
+ * ServerManager initialize server and start Thread which receiving requests and Thread which read console commands
  */
 public class ServerManager {
 
