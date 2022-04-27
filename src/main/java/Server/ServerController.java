@@ -22,7 +22,7 @@ public class ServerController {
     }
 
     public static void error(String message, Throwable error) {
-        logger.error("\u001B[31m" + message + "\u001B[0m",error);
+        logger.error("\u001B[31m" + message + "\u001B[0m");
     }
 
     public static void run() {

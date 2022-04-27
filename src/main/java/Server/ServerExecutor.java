@@ -3,6 +3,7 @@ package Server;
 import Client.Request;
 import Commands.Command;
 import Commands.CommandException;
+import MovieObjects.Movie;
 import MovieObjects.UserProfile;
 
 import java.net.SocketAddress;
@@ -37,18 +38,28 @@ public class ServerExecutor {
     void executeRequest() {
         ServerController.info("Request starts executing");
 
-        if (request.getRequestType() == Request.RequestType.CHECK_CONNECTION) {
-            checkConnectionRequest();
-        } else if (request.getRequestType() == Request.RequestType.LOGIN_USER) {
-            loginUserRequest();
-        } else if (request.getRequestType() == Request.RequestType.LOGOUT_USER) {
-            logoutUserRequest();
-        } else if (request.getRequestType() == Request.RequestType.REGISTER_USER) {
-            registerUserRequest();
-        } else if (request.getRequestType() == Request.RequestType.EXECUTE_COMMAND) {
-            executeCommandRequest();
-        } else {
-            ServerController.info("Incorrect request type: " + request.getRequestType());
+        try {
+            if (request.getRequestType() == Request.RequestType.CHECK_CONNECTION) {
+                checkConnectionRequest();
+            } else if (request.getRequestType() == Request.RequestType.LOGIN_USER) {
+                loginUserRequest();
+            } else if (request.getRequestType() == Request.RequestType.LOGOUT_USER) {
+                logoutUserRequest();
+            } else if (request.getRequestType() == Request.RequestType.REGISTER_USER) {
+                registerUserRequest();
+            } else if (request.getRequestType() == Request.RequestType.CHECK_ELEMENT) {
+                checkElementRequest();
+            } else if (request.getRequestType() == Request.RequestType.EXECUTE_COMMAND) {
+                executeCommandRequest();
+            } else {
+                ServerController.info("Unexpected request type: " + request.getRequestType());
+            }
+        } catch (NullPointerException e) {
+            ResponseBuilder responseBuilder = ResponseBuilder.createNewResponse(
+                    Response.ResponseType.WRONG_REQUEST_FORMAT,
+                    "Wrong request format"
+            );
+            new Thread(() -> ServerConnector.sendToClient(client, responseBuilder.getResponse()), "SendingWFThread").start();
         }
 
         ServerController.info("Request executed");
@@ -95,6 +106,37 @@ public class ServerExecutor {
 
     static void logoutUser(String userName) {
         authorizedUsers.removeAll(authorizedUsers.stream().filter(u -> u.getName().equals(userName)).collect(Collectors.toList()));
+    }
+
+    private void checkElementRequest() {
+        ResponseBuilder responseBuilder;
+        if (authorizedUsers.stream().noneMatch((u) -> u.equals(request.getUserProfile()))) {
+            responseBuilder = ResponseBuilder.createNewResponse(
+                    Response.ResponseType.CHECKING_FAILED,
+                    "User isn't logged in yet"
+            );
+        } else {
+            Movie movie = ServerCollectionManager.getMovie(request.getCheckingIndex());
+            if (movie == null) {
+                responseBuilder = ResponseBuilder.createNewResponse(
+                        Response.ResponseType.ELEMENT_ABSENTED,
+                        "Movie with key \"" + request.getCheckingIndex() + "\" doesn't exist"
+                );
+            } else {
+                if (!movie.getOwner().equals(request.getUserProfile().getName())) {
+                    responseBuilder = ResponseBuilder.createNewResponse(
+                            Response.ResponseType.PERMISSION_DENIED,
+                            "User \"" + request.getUserProfile().getName() + "\" doesn't have permission to update movie with key \"" + request.getCheckingIndex() + "\""
+                    );
+                } else {
+                    responseBuilder = ResponseBuilder.createNewResponse(
+                            Response.ResponseType.CHECKING_SUCCESSFUL,
+                            "Movie with key \"" + request.getCheckingIndex() + "\" doesn't exist"
+                    );
+                }
+            }
+        }
+        new Thread(() -> ServerConnector.sendToClient(client, responseBuilder.getResponse()), "SendingCEThread").start();
     }
 
     private void registerUserRequest() {

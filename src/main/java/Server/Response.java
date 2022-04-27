@@ -36,11 +36,21 @@ public class Response implements Serializable {
     }
 
     public enum ResponseType {
+        WRONG_REQUEST_FORMAT,
+
         CONNECTION_SUCCESSFUL,
+
         LOGIN_SUCCESSFUL,
         LOGIN_FAILED,
+
         REGISTER_SUCCESSFUL,
         REGISTER_FAILED,
+
+        ELEMENT_ABSENTED,
+        PERMISSION_DENIED,
+        CHECKING_SUCCESSFUL,
+        CHECKING_FAILED,
+
         EXECUTION_SUCCESSFUL,
         EXECUTION_FAILED
     }

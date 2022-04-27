@@ -1,9 +1,14 @@
 package Commands;
 
+import Client.ClientConnector;
+import Client.Request;
 import Client.RequestBuilder;
+import Server.Response;
 import Server.ServerExecutor;
 import Server.ServerINFO;
 
+import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.sql.SQLException;
 import java.util.Scanner;
 
@@ -32,6 +37,13 @@ public class UpdateCommand extends ElementCommand {
             server.getResponseBuilder().add("The movie has been updated");
         }
         return true;
+    }
+
+    @Override
+    protected void checkElement(Response response) throws BadArgumentsException {
+        if (response.getResponseType() != Response.ResponseType.CHECKING_SUCCESSFUL) {
+            throw new BadArgumentsException(getCommandName(), response.getMessage());
+        }
     }
 
     @Override

@@ -36,5 +36,8 @@ public class RequestBuilder {
     public static Request getRequest() {
         return request;
     }
+    public static UserProfile getUserProfile() {
+        return userProfile;
+    }
 
 }

@@ -45,9 +45,11 @@ public class ServerCollectionManager {
             dbUser = args[3];
             dbPassword = args[4];
         } catch (FileNotFoundException e) {
-            throw new FileNotFoundException("File \".pgpass\" not found");
+            throw new FileNotFoundException("File \".pgpass\" with login and password to connect to database not found (it must be <>:<>:<>:<username>:<password> format)");
         } catch (NoSuchElementException e) {
-            throw new NoSuchElementException("File \".pgpass\" has no line");
+            throw new NoSuchElementException("File \".pgpass\" has no line (it must be <>:<>:<>:<username>:<password> format)");
+        } catch (IndexOutOfBoundsException e) {
+            throw new FileNotFoundException("File \".pgpass\" must have first string with <>:<>:<>:<username>:<password> format");
         }
 
     }
@@ -217,7 +219,11 @@ public class ServerCollectionManager {
     }
 
     public static Movie getMovie(Integer key) {
-        return movieCollection.get(key).clone();
+        try {
+            return movieCollection.get(key).clone();
+        } catch (NullPointerException e) {
+            return null;
+        }
     }
 
     public static Movie putMovie(Integer key, Movie movie, UserProfile userProfile) throws IllegalAccessException {

@@ -47,7 +47,7 @@ public class ClientConnector {
         }
     }
 
-    static Response sendToServer(Request request) throws IOException, ClassNotFoundException {
+    public static Response sendToServer(Request request) throws IOException, ClassNotFoundException {
         try {
             sendRequest(request);
         } catch (IOException e) {

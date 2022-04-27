@@ -1,13 +1,19 @@
 package Commands;
 
+import Client.ClientConnector;
 import Client.ClientController;
+import Client.Request;
+import Client.RequestBuilder;
 import MovieObjects.Coordinates;
 import MovieObjects.FieldSetter;
 import MovieObjects.Movie;
 import MovieObjects.Person;
+import Server.Response;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.SocketTimeoutException;
 import java.util.*;
 
 /**
@@ -163,14 +169,33 @@ public abstract class ElementCommand extends NameableCommand {
             throw new BadArgumentsCountException(getCommandName(), 1);
         }
         try {
-            this.key = Integer.parseInt(args[0]);
+            key = Integer.parseInt(args[0]);
         } catch (NumberFormatException e) {
             throw new BadArgumentsFormatException(getCommandName(), "value must be integer");
         }
+
+        sendRequestAndCheckElement();
+
         try {
             this.readMovie = readMovie();
         } catch (NoSuchElementException e) {
             throw new BadArgumentsException(getCommandName(), "INVALID INPUT \"EOF\"");
         }
     }
+
+    private void sendRequestAndCheckElement() throws BadArgumentsException {
+        try {
+            Response response = ClientConnector.sendToServer(
+                    new Request(Request.RequestType.CHECK_ELEMENT,
+                            RequestBuilder.getUserProfile(),
+                            key));
+            checkElement(response);
+        } catch (SocketTimeoutException e) {
+            throw new BadArgumentsException(getCommandName(), "Server is not responding, try later or choose another server");
+        } catch (IOException | ClassNotFoundException e) {
+            throw new BadArgumentsException(getCommandName(), e.getMessage());
+        }
+    }
+
+    protected abstract void checkElement(Response response) throws BadArgumentsException;
 }
