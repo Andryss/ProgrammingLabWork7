@@ -41,8 +41,10 @@ public class InsertCommand extends ElementCommand {
 
     @Override
     protected void checkElement(Response response) throws BadArgumentsException {
-        if (response.getResponseType() != Response.ResponseType.ELEMENT_ABSENTED) {
+        if (response.getResponseType() == Response.ResponseType.CHECKING_FAILED) {
             throw new BadArgumentsException(getCommandName(), response.getMessage());
+        } else if (response.getResponseType() != Response.ResponseType.ELEMENT_NOT_PRESENTED) {
+            throw new BadArgumentsException(getCommandName(), "Movie with key \"" + key + "\" already exists");
         }
     }
 

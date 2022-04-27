@@ -13,7 +13,7 @@ import java.util.Queue;
 public class Request implements Serializable {
     private final RequestType requestType;
     private final UserProfile userProfile;
-    private int checkingIndex;
+    private Integer checkingIndex;
     private String commandName;
     private final Queue<Command> commandQueue = new LinkedList<>();
 

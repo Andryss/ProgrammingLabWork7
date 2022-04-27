@@ -1,12 +1,12 @@
 package Server;
 
+import MovieObjects.FieldException;
 import MovieObjects.UserProfile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.NoSuchElementException;
 
 /**
  * ServerController logging into file and terminal, implements simple console commands for server
@@ -43,6 +43,7 @@ public class ServerController {
                                 "show - print authorized users and collections\n" +
                                 "reg <name> <pass> - register new user\n" +
                                 "remove <key> - remove movie\n" +
+                                "clear - clear movie collection\n" +
                                 "dropcreate - drop and create tables");
                         break;
 
@@ -75,11 +76,17 @@ public class ServerController {
                         }
                         break;
 
+                    case "clear":
+                        ServerCollectionManager.removeAllMovies();
+                        break;
+
                     case "dropcreate":
                         try {
+                            ServerExecutor.getAuthorizedUsers().clear();
                             ServerCollectionManager.dropTables();
                             ServerCollectionManager.createTables();
-                        } catch (SQLException e) {
+                            ServerCollectionManager.loadCollectionsFromDB();
+                        } catch (SQLException | FieldException e) {
                             error(e.getMessage(), e);
                         }
                         break;

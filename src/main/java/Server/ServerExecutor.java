@@ -119,7 +119,7 @@ public class ServerExecutor {
             Movie movie = ServerCollectionManager.getMovie(request.getCheckingIndex());
             if (movie == null) {
                 responseBuilder = ResponseBuilder.createNewResponse(
-                        Response.ResponseType.ELEMENT_ABSENTED,
+                        Response.ResponseType.ELEMENT_NOT_PRESENTED,
                         "Movie with key \"" + request.getCheckingIndex() + "\" doesn't exist"
                 );
             } else {
@@ -131,7 +131,7 @@ public class ServerExecutor {
                 } else {
                     responseBuilder = ResponseBuilder.createNewResponse(
                             Response.ResponseType.CHECKING_SUCCESSFUL,
-                            "Movie with key \"" + request.getCheckingIndex() + "\" doesn't exist"
+                            "User \"" + request.getUserProfile().getName() + "\" have permission to update movie with key \"" + request.getCheckingIndex() + "\""
                     );
                 }
             }

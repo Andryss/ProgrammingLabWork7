@@ -219,11 +219,8 @@ public class ServerCollectionManager {
     }
 
     public static Movie getMovie(Integer key) {
-        try {
-            return movieCollection.get(key).clone();
-        } catch (NullPointerException e) {
-            return null;
-        }
+        // return movieCollection.get(key).clone();
+        return movieCollection.get(key);
     }
 
     public static Movie putMovie(Integer key, Movie movie, UserProfile userProfile) throws IllegalAccessException {
@@ -355,7 +352,19 @@ public class ServerCollectionManager {
         }
     }
 
-    private static void loadCollectionsFromDB() throws SQLException, FieldException {
+    static void removeAllMovies() {
+        readWriteLock.lock();
+        try {
+            statement.executeQuery(String.format("DELETE * FROM %s", movieTable));
+        } catch (SQLException e) {
+            ServerController.error(e.getMessage(), e);
+        } finally {
+            readWriteLock.unlock();
+        }
+        movieCollection.clear();
+    }
+
+    static void loadCollectionsFromDB() throws SQLException, FieldException {
         ResultSet usersResultSet = statement.executeQuery(String.format("SELECT * FROM %s", usersTable));
         userCollection = new Hashtable<>();
         while (usersResultSet.next()) {

@@ -46,12 +46,20 @@ public class Response implements Serializable {
         REGISTER_SUCCESSFUL,
         REGISTER_FAILED,
 
-        ELEMENT_ABSENTED,
+        ELEMENT_NOT_PRESENTED,
         PERMISSION_DENIED,
         CHECKING_SUCCESSFUL,
         CHECKING_FAILED,
 
         EXECUTION_SUCCESSFUL,
         EXECUTION_FAILED
+    }
+
+    @Override
+    public String toString() {
+        return "Response{" +
+                "responseType=" + responseType +
+                ", message=" + message +
+                '}';
     }
 }
