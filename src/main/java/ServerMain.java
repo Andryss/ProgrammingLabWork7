@@ -1,12 +1,6 @@
-import MovieObjects.FieldException;
-import Server.ServerController;
-import Server.ServerManager;
-
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Properties;
+import general.element.FieldException;
+import server.ServerController;
+import server.ServerManager;
 
 public class ServerMain {
 
