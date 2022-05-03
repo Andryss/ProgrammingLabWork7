@@ -55,11 +55,11 @@ public class ServerExecutor {
                 ServerController.info("Unexpected request type: " + request.getRequestType());
             }
         } catch (NullPointerException e) {
-            ResponseBuilder responseBuilder = ResponseBuilder.createNewResponse(
+            Response response = ResponseBuilder.createNewResponse(
                     Response.ResponseType.WRONG_REQUEST_FORMAT,
                     "Wrong request format"
             );
-            new Thread(() -> ServerConnector.sendToClient(client, responseBuilder.getResponse()), "SendingWFThread").start();
+            new Thread(() -> ServerConnector.sendToClient(client, response), "SendingWFThread").start();
         }
 
         ServerController.info("Request executed");
@@ -69,126 +69,136 @@ public class ServerExecutor {
     }
 
     private void checkConnectionRequest() {
-        ResponseBuilder responseBuilder = ResponseBuilder.createNewResponse(
+        Response response = ResponseBuilder.createNewResponse(
                 Response.ResponseType.CONNECTION_SUCCESSFUL,
                 "Connection with server was successful"
         );
-        new Thread(() -> ServerConnector.sendToClient(client, responseBuilder.getResponse()), "SendingCCThread").start();
+        new Thread(() -> ServerConnector.sendToClient(client, response), "SendingCCThread").start();
     }
 
     private void loginUserRequest() {
-        ResponseBuilder responseBuilder;
+        Response response;
         if (ServerCollectionManager.isUserPresented(request.getUserProfile())) {
             if (authorizedUsers.contains(request.getUserProfile())) {
-                responseBuilder = ResponseBuilder.createNewResponse(
+                response = ResponseBuilder.createNewResponse(
                         Response.ResponseType.LOGIN_FAILED,
                         "User already authorized (multi-session is not supported)"
                 );
             } else {
                 authorizedUsers.add(request.getUserProfile());
-                responseBuilder = ResponseBuilder.createNewResponse(
+                response = ResponseBuilder.createNewResponse(
                         Response.ResponseType.LOGIN_SUCCESSFUL,
                         "User successfully logged in"
                 );
+                ServerHistoryManager.updateUser(request.getUserProfile());
             }
         } else {
-            responseBuilder = ResponseBuilder.createNewResponse(
+            response = ResponseBuilder.createNewResponse(
                     Response.ResponseType.LOGIN_FAILED,
                     "Incorrect login or password"
             );
         }
-        new Thread(() -> ServerConnector.sendToClient(client, responseBuilder.getResponse()), "SendingLUThread").start();
+        new Thread(() -> ServerConnector.sendToClient(client, response), "SendingLUThread").start();
     }
 
     private void logoutUserRequest() {
-        authorizedUsers.stream().filter(u -> u.equals(request.getUserProfile())).forEach(authorizedUsers::remove);
+        authorizedUsers.remove(request.getUserProfile());
+        ServerHistoryManager.deleteUser(request.getUserProfile());
     }
 
     static void logoutUser(String userName) {
-        authorizedUsers.removeAll(authorizedUsers.stream().filter(u -> u.getName().equals(userName)).collect(Collectors.toList()));
+        authorizedUsers.stream().filter(u -> u.getName().equals(userName))
+                .forEach(u -> {
+                    authorizedUsers.remove(u);
+                    ServerHistoryManager.deleteUser(u);
+                });
     }
 
     private void checkElementRequest() {
-        ResponseBuilder responseBuilder;
+        Response response;
         if (authorizedUsers.stream().noneMatch((u) -> u.equals(request.getUserProfile()))) {
-            responseBuilder = ResponseBuilder.createNewResponse(
+            response = ResponseBuilder.createNewResponse(
                     Response.ResponseType.CHECKING_FAILED,
                     "User isn't logged in yet"
             );
         } else {
             Movie movie = ServerCollectionManager.getMovie(request.getCheckingIndex());
             if (movie == null) {
-                responseBuilder = ResponseBuilder.createNewResponse(
+                response = ResponseBuilder.createNewResponse(
                         Response.ResponseType.ELEMENT_NOT_PRESENTED,
                         "Movie with key \"" + request.getCheckingIndex() + "\" doesn't exist"
                 );
             } else {
                 if (!movie.getOwner().equals(request.getUserProfile().getName())) {
-                    responseBuilder = ResponseBuilder.createNewResponse(
+                    response = ResponseBuilder.createNewResponse(
                             Response.ResponseType.PERMISSION_DENIED,
                             "User \"" + request.getUserProfile().getName() + "\" doesn't have permission to update movie with key \"" + request.getCheckingIndex() + "\""
                     );
                 } else {
-                    responseBuilder = ResponseBuilder.createNewResponse(
+                    response = ResponseBuilder.createNewResponse(
                             Response.ResponseType.CHECKING_SUCCESSFUL,
                             "User \"" + request.getUserProfile().getName() + "\" have permission to update movie with key \"" + request.getCheckingIndex() + "\""
                     );
                 }
             }
+            ServerHistoryManager.updateUser(request.getUserProfile());
         }
-        new Thread(() -> ServerConnector.sendToClient(client, responseBuilder.getResponse()), "SendingCEThread").start();
+        new Thread(() -> ServerConnector.sendToClient(client, response), "SendingCEThread").start();
     }
 
     private void registerUserRequest() {
-        ResponseBuilder responseBuilder;
+        Response response;
         long newUserID = ServerCollectionManager.registerUser(request.getUserProfile());
         if (newUserID == -1) {
-            responseBuilder = ResponseBuilder.createNewResponse(
+            response = ResponseBuilder.createNewResponse(
                     Response.ResponseType.REGISTER_FAILED,
                     "User is already registered"
             );
         } else {
             authorizedUsers.add(request.getUserProfile());
-            responseBuilder = ResponseBuilder.createNewResponse(
+            response = ResponseBuilder.createNewResponse(
                     Response.ResponseType.REGISTER_SUCCESSFUL,
                     "New user successfully registered"
             );
+            ServerHistoryManager.updateUser(request.getUserProfile());
         }
-        new Thread(() -> ServerConnector.sendToClient(client, responseBuilder.getResponse()), "SendingRUThread").start();
+        new Thread(() -> ServerConnector.sendToClient(client, response), "SendingRUThread").start();
     }
 
     private void executeCommandRequest() {
-        ResponseBuilder responseBuilder;
+        Response response;
         if (authorizedUsers.stream().noneMatch((u) -> u.equals(request.getUserProfile()))) {
-            responseBuilder = ResponseBuilder.createNewResponse(
+            response = ResponseBuilder.createNewResponse(
                     Response.ResponseType.EXECUTION_FAILED,
                     "User isn't logged in yet"
             );
         } else {
-            responseBuilder = ResponseBuilder.createNewResponse(
+            response = ResponseBuilder.createNewResponse(
                     Response.ResponseType.EXECUTION_SUCCESSFUL
             );
-            serverINFO = new ServerINFO(request.getUserProfile(), responseBuilder);
+            ServerHistoryManager.updateUser(request.getUserProfile());
+            serverINFO = new ServerINFOImpl(request.getUserProfile(), response);
 
             Queue<Command> commandQueue = request.getCommandQueue();
             try {
-                responseBuilder.add("\u001B[34m" + "START: command \"" + request.getCommandName() + "\" start executing" + "\u001B[0m");
+                response.addMessage("\u001B[34m" + "START: command \"" + request.getCommandName() + "\" start executing" + "\u001B[0m");
                 if (commandQueue.size() > 1) {
                     validateCommands(commandQueue);
                 }
                 for (Command command : commandQueue) {
-                    command.execute(ExecuteState.EXECUTE, serverINFO);
+                    command.execute(serverINFO);
                 }
-                responseBuilder.add("\u001B[32m" + "SUCCESS: command \"" + request.getCommandName() + "\" successfully completed" + "\u001B[0m");
+                response.addMessage("\u001B[32m" + "SUCCESS: command \"" + request.getCommandName() + "\" successfully completed" + "\u001B[0m");
+                ServerHistoryManager.addUserHistory(request.getUserProfile(), request.getCommandName());
             } catch (CommandException e) {
-                responseBuilder = ResponseBuilder.createNewResponse(
+                response = ResponseBuilder.createNewResponse(
                         Response.ResponseType.EXECUTION_FAILED,
                         e.getMessage()
                 );
             }
         }
-        ResponseBuilder finalResponseBuilder = responseBuilder;
-        new Thread(() -> ServerConnector.sendToClient(client, finalResponseBuilder.getResponse()), "SendingECThread").start();
+        Response finalResponse = response;
+        new Thread(() -> ServerConnector.sendToClient(client, finalResponse), "SendingECThread").start();
     }
 
     private void validateCommands(Queue<Command> commandQueue) throws CommandException {
@@ -196,7 +206,7 @@ public class ServerExecutor {
 
         for (Command command : commandQueue) {
             try {
-                command.execute(ExecuteState.VALIDATE, copiedServerINFO);
+                command.execute(copiedServerINFO);
             } catch (CommandException e) {
                 throw new CommandException(e.getCommand(), "Error in validation: " + e.getMessage());
             }
@@ -211,18 +221,4 @@ public class ServerExecutor {
         return executorService;
     }
     static List<UserProfile> getAuthorizedUsers() {return authorizedUsers;}
-
-    /**
-     * Enum with two main states of executing command
-     */
-    public enum ExecuteState {
-        /**
-         * When command do what it should do (with logging)
-         */
-        EXECUTE,
-        /**
-         * When command is validating, for example, in script (without logging)
-         */
-        VALIDATE
-    }
 }

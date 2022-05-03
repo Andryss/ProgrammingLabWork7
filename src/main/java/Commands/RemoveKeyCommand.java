@@ -1,10 +1,7 @@
 package Commands;
 
-import Client.RequestBuilder;
-import Server.ServerExecutor;
+import Client.Request;
 import Server.ServerINFO;
-
-import java.sql.SQLException;
 
 /**
  * Command, which deletes an element with given key
@@ -18,16 +15,13 @@ public class RemoveKeyCommand extends NameableCommand {
     }
 
     @Override
-    public boolean execute(ServerExecutor.ExecuteState state, ServerINFO server) throws CommandException {
+    public void execute(ServerINFO server) throws CommandException {
         try {
             server.removeMovie(key);
-            if (state == ServerExecutor.ExecuteState.EXECUTE) {
-                server.getResponseBuilder().add("Element with key \"" + key + "\" has been removed");
-            }
+            server.getResponse().addMessage("Element with key \"" + key + "\" has been removed");
         } catch (IllegalAccessException e) {
-            server.getResponseBuilder().add("Nothing has been removed (" + e.getMessage() + ")");
+            server.getResponse().addMessage("Nothing has been removed (" + e.getMessage() + ")");
         }
-        return true;
     }
 
     @Override
@@ -43,9 +37,9 @@ public class RemoveKeyCommand extends NameableCommand {
     }
 
     @Override
-    public void buildRequest() throws CommandException {
+    public void buildRequest(Request request) throws CommandException {
         RemoveKeyCommand command = new RemoveKeyCommand(getCommandName());
         command.key = key;
-        RequestBuilder.add(command);
+        request.addCommand(command);
     }
 }

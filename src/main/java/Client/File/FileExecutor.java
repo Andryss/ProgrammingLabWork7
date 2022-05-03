@@ -1,6 +1,7 @@
 package Client.File;
 
 import Client.ClientExecutor;
+import Client.Request;
 import Commands.*;
 import Server.ServerExecutor;
 import Server.ServerINFO;
@@ -16,13 +17,15 @@ import java.util.Scanner;
 public class FileExecutor {
     private HashMap<String, Command> commandMap = new HashMap<>();
     private final FileExecutor caller;
+    private final Request request;
     private final String fileName;
     private int commandNumber = 1;
 
-    public FileExecutor(FileController fileController, FileExecutor caller) {
+    public FileExecutor(FileController fileController, FileExecutor caller, Request request) {
         fillCommandMap(fileController.getReader());
         this.caller = caller;
         this.fileName = fileController.getFileName();
+        this.request = request;
     }
 
     private void fillCommandMap(Scanner reader) {
@@ -33,7 +36,7 @@ public class FileExecutor {
         commandMap.put("replace_if_greater", new ReplaceIfGreaterCommand("replace_if_greater", reader, true));
         commandMap.put("exit", new NameableCommand("exit") {
             @Override
-            public boolean execute(ServerExecutor.ExecuteState state, ServerINFO server) throws CommandException {
+            public void execute(ServerINFO server) throws CommandException {
                 throw new BadArgumentsException(getCommandName(), "do you really want \"exit\" in script? Sorry, not today");
             }
 
@@ -71,7 +74,7 @@ public class FileExecutor {
             throw new CommandException(commandName, "File ended before command \"" + commandName + "\" completed");
         }
         try {
-            command.buildRequest();
+            command.buildRequest(request);
         } catch (CommandException e) {
             throw new CommandException(commandName, e.getReason());
         }

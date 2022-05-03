@@ -1,5 +1,6 @@
 package Client.File;
 
+import Client.Request;
 import Commands.CommandException;
 
 import java.io.File;
@@ -15,9 +16,9 @@ public class FileManager {
     private final FileController controller;
     private final FileExecutor executor;
 
-    public FileManager(File file, FileExecutor caller) throws FileNotFoundException {
+    public FileManager(File file, FileExecutor caller, Request request) throws FileNotFoundException {
         this.controller = new FileController(file);
-        this.executor = new FileExecutor(this.controller, caller);
+        this.executor = new FileExecutor(this.controller, caller, request);
     }
 
     public void buildRequest() throws CommandException {

@@ -1,58 +1,26 @@
 package Client;
 
 import Commands.Command;
+import Commands.CommandException;
 import MovieObjects.UserProfile;
 
-import java.io.Serializable;
-import java.util.LinkedList;
 import java.util.Queue;
 
-/**
- * Request class contains all information client can send to the server in one class
- */
-public class Request implements Serializable {
-    private final RequestType requestType;
-    private final UserProfile userProfile;
-    private Integer checkingIndex;
-    private String commandName;
-    private final Queue<Command> commandQueue = new LinkedList<>();
+public interface Request {
 
-    public Request(RequestType requestType, UserProfile userProfile) {
-        this.requestType = requestType;
-        this.userProfile = userProfile;
-    }
+    RequestType getRequestType();
 
-    public Request(RequestType requestType, UserProfile userProfile, int checkingIndex) {
-        this(requestType, userProfile);
-        this.checkingIndex = checkingIndex;
-    }
+    UserProfile getUserProfile();
 
-    public Request(RequestType requestType, UserProfile userProfile, String commandName) {
-        this(requestType, userProfile);
-        this.commandName = commandName;
-    }
+    Integer getCheckingIndex();
 
-    public RequestType getRequestType() {
-        return requestType;
-    }
-    public UserProfile getUserProfile() {
-        return userProfile;
-    }
-    public int getCheckingIndex() {
-        return checkingIndex;
-    }
-    public String getCommandName() {
-        return commandName;
-    }
-    public Queue<Command> getCommandQueue() {
-        return commandQueue;
-    }
+    String getCommandName();
 
-    void addCommand(Command command) {
-        commandQueue.add(command);
-    }
+    Queue<Command> getCommandQueue();
 
-    public enum RequestType {
+    void addCommand(Command command) throws CommandException;
+
+    enum RequestType {
         CHECK_CONNECTION,
 
         LOGIN_USER,
@@ -64,16 +32,5 @@ public class Request implements Serializable {
         CHECK_ELEMENT,
 
         EXECUTE_COMMAND
-    }
-
-    @Override
-    public String toString() {
-        return "Request{" +
-                "requestType=" + requestType +
-                ", userProfile='" + userProfile + '\'' +
-                ", checkingIndex='" + checkingIndex + '\'' +
-                ", commandName='" + commandName + '\'' +
-                ", commandQueue=" + commandQueue +
-                '}';
     }
 }

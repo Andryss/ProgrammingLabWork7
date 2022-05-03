@@ -1,7 +1,6 @@
 package Client;
 
 import Commands.*;
-import MovieObjects.UserProfile;
 
 import java.util.*;
 
@@ -14,7 +13,7 @@ import java.util.*;
  */
 public class ClientExecutor {
     private static final HashMap<String, Command> commandMap = new HashMap<>();
-    private static final List<String> history = new LinkedList<>();
+    private static Request request;
 
     static void initialize() {
         fillCommandMap();
@@ -31,7 +30,7 @@ public class ClientExecutor {
         //save --- FORBIDDEN!
         commandMap.put("execute_script", new ExecuteScriptCommand("execute_script", null));
         commandMap.put("exit", new ExitCommand("exit"));
-        commandMap.put("history", new HistoryCommand("history", history));
+        commandMap.put("history", new HistoryCommand("history"));
         commandMap.put("replace_if_greater", new ReplaceIfGreaterCommand("replace_if_greater", ClientController.getReader()));
         commandMap.put("remove_lower_key", new RemoveLowerKeyCommand("remove_key_command"));
         commandMap.put("group_counting_by_length", new GroupCountingByLengthCommand("group_counting_by_length"));
@@ -57,12 +56,14 @@ public class ClientExecutor {
             throw new UndefinedCommandException(commandName);
         }
         command.setArgs(args);
-        history.add(commandName);
-        RequestBuilder.createNewRequest(Request.RequestType.EXECUTE_COMMAND, commandName);
-        command.buildRequest();
+        request = RequestBuilder.createNewRequest(Request.RequestType.EXECUTE_COMMAND, commandName);
+        command.buildRequest(request);
     }
 
     public static HashMap<String,Command> getCommandMap() {
         return commandMap;
+    }
+    public static Request getRequest() {
+        return request;
     }
 }

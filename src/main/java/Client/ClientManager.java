@@ -6,11 +6,7 @@ import Server.Response;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.NoSuchElementException;
 
 /**
@@ -97,9 +93,8 @@ public class ClientManager {
             return false;
         }
         RequestBuilder.setUserProfile(userProfile);
-        RequestBuilder.createNewRequest(requestType);
         try {
-            Response response = ClientConnector.sendToServer(RequestBuilder.getRequest());
+            Response response = ClientConnector.sendToServer(RequestBuilder.createNewRequest(requestType));
             if (response.getResponseType() == responseTypeFail) {
                 ClientController.printlnErr(response.getMessage());
             } else if (response.getResponseType() == responseTypeSuccess) {
@@ -123,9 +118,8 @@ public class ClientManager {
 
     private static void addLogoutHook() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            RequestBuilder.createNewRequest(Request.RequestType.LOGOUT_USER);
             try {
-                ClientConnector.sendRequest(RequestBuilder.getRequest());
+                ClientConnector.sendRequest(RequestBuilder.createNewRequest(Request.RequestType.LOGOUT_USER));
             } catch (IOException e) {
                 //ignore
             }
@@ -138,7 +132,7 @@ public class ClientManager {
         while (true) {
             try {
                 ClientExecutor.parseCommand(ClientController.readLine());
-                Response response = ClientConnector.sendToServer(RequestBuilder.getRequest());
+                Response response = ClientConnector.sendToServer(ClientExecutor.getRequest());
                 if (response.getResponseType() == Response.ResponseType.EXECUTION_SUCCESSFUL) {
                     ClientController.println(response.getMessage());
                 } else if (response.getResponseType() == Response.ResponseType.EXECUTION_FAILED) {

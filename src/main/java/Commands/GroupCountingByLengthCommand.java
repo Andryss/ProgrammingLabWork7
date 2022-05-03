@@ -1,8 +1,6 @@
 package Commands;
 
 import MovieObjects.Movie;
-import Server.ResponseBuilder;
-import Server.ServerExecutor;
 import Server.ServerINFO;
 
 import java.util.stream.Collectors;
@@ -18,15 +16,11 @@ public class GroupCountingByLengthCommand extends NameableCommand {
     }
 
     @Override
-    public boolean execute(ServerExecutor.ExecuteState state, ServerINFO server) throws CommandException {
-        if (state == ServerExecutor.ExecuteState.VALIDATE) {
-            return true;
-        }
-        server.getResponseBuilder().add("*groups by length*");
+    public void execute(ServerINFO server) throws CommandException {
+        server.getResponse().addMessage("*groups by length*");
         server.getMovieCollection().values().stream()
                 .collect(Collectors.groupingBy(Movie::getLength, Collectors.counting()))
-                .forEach((length, count) -> server.getResponseBuilder().add(count + " movies with length " + length));
-        return true;
+                .forEach((length, count) -> server.getResponse().addMessage(count + " movies with length " + length));
     }
 
     @Override

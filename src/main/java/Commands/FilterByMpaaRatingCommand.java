@@ -1,8 +1,7 @@
 package Commands;
 
-import Client.RequestBuilder;
+import Client.Request;
 import MovieObjects.Movie;
-import Server.ServerExecutor;
 import Server.ServerINFO;
 
 import java.util.Arrays;
@@ -22,20 +21,16 @@ public class FilterByMpaaRatingCommand extends NameableCommand {
     }
 
     @Override
-    public boolean execute(ServerExecutor.ExecuteState state, ServerINFO server) throws CommandException {
-        if (state == ServerExecutor.ExecuteState.VALIDATE) {
-            return true;
-        }
-        server.getResponseBuilder().add("Found movies with \"" + mpaaRating + "\" mpaa rating:");
+    public void execute(ServerINFO server) throws CommandException {
+        server.getResponse().addMessage("Found movies with \"" + mpaaRating + "\" mpaa rating:");
         List<Map.Entry<Integer,Movie>> found = server.getMovieCollection().entrySet().stream()
                 .filter(entry -> entry.getValue().getMpaaRating() == mpaaRating)
                 .collect(Collectors.toList());
         if (found.size() == 0) {
-            server.getResponseBuilder().add("*nothing*");
+            server.getResponse().addMessage("*nothing*");
         } else {
-            found.forEach(entry -> server.getResponseBuilder().add(entry.getKey() + " - " + entry.getValue()));
+            found.forEach(entry -> server.getResponse().addMessage(entry.getKey() + " - " + entry.getValue()));
         }
-        return true;
     }
 
     @Override
@@ -51,9 +46,9 @@ public class FilterByMpaaRatingCommand extends NameableCommand {
     }
 
     @Override
-    public void buildRequest() throws CommandException {
+    public void buildRequest(Request request) throws CommandException {
         FilterByMpaaRatingCommand command = new FilterByMpaaRatingCommand(getCommandName());
         command.mpaaRating = mpaaRating;
-        RequestBuilder.add(command);
+        request.addCommand(command);
     }
 }

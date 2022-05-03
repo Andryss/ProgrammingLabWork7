@@ -1,8 +1,8 @@
 package Commands;
 
-import Server.ServerExecutor;
 import Server.ServerINFO;
 
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -11,22 +11,16 @@ import java.util.List;
  */
 public class HistoryCommand extends NameableCommand {
 
-    private final List<String> history;
-
-    public HistoryCommand(String commandName, List<String> history) {
+    public HistoryCommand(String commandName) {
         super(commandName);
-        this.history = history;
     }
 
     @Override
-    public boolean execute(ServerExecutor.ExecuteState state, ServerINFO server) {
-        if (state == ServerExecutor.ExecuteState.VALIDATE) {
-            return true;
-        }
+    public void execute(ServerINFO server) {
+        LinkedList<String> history = server.getUserHistory();
         for (int i = Math.max(0, history.size() - 13); i < history.size(); i++) {
-            server.getResponseBuilder().add(history.get(i));
+            server.getResponse().addMessage(history.get(i));
         }
-        return true;
     }
 
     @Override

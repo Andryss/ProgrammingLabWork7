@@ -1,6 +1,5 @@
 package Commands;
 
-import Server.ServerExecutor;
 import Server.ServerINFO;
 
 /**
@@ -14,16 +13,13 @@ public class ClearCommand extends NameableCommand {
     }
 
     @Override
-    public boolean execute(ServerExecutor.ExecuteState state, ServerINFO server) throws CommandException {
+    public void execute(ServerINFO server) throws CommandException {
         try {
             server.removeAllMovies();
         } catch (IllegalAccessException e) {
             //ignore
         }
-        if (state == ServerExecutor.ExecuteState.EXECUTE) {
-            server.getResponseBuilder().add("All your elements deleted");
-        }
-        return true;
+        server.getResponse().addMessage("All your elements deleted");
     }
 
     @Override

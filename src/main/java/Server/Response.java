@@ -1,41 +1,14 @@
 package Server;
 
-import java.io.Serializable;
-import java.util.ArrayList;
+public interface Response {
 
-/**
- * Response class contains all information the server can send to client in one class
- */
-public class Response implements Serializable {
-    private ResponseType responseType;
-    private ArrayList<String> message;
+    Response addMessage(String line);
 
-    public Response(ResponseType responseType) {
-        this.responseType = responseType;
-    }
+    ResponseType getResponseType();
 
-    void addMessage(String message) {
-        if (this.message == null) {
-            this.message = new ArrayList<>();
-        } else {
-            this.message.add("\n");
-        }
-        this.message.add(message.intern());
-    }
+    String getMessage();
 
-    void setResponseType(ResponseType responseType) {
-        this.responseType = responseType;
-    }
-    public ResponseType getResponseType() {
-        return responseType;
-    }
-    public String getMessage() {
-        StringBuilder builder = new StringBuilder();
-        message.forEach(builder::append);
-        return builder.toString();
-    }
-
-    public enum ResponseType {
+    enum ResponseType {
         WRONG_REQUEST_FORMAT,
 
         CONNECTION_SUCCESSFUL,
@@ -53,13 +26,5 @@ public class Response implements Serializable {
 
         EXECUTION_SUCCESSFUL,
         EXECUTION_FAILED
-    }
-
-    @Override
-    public String toString() {
-        return "Response{" +
-                "responseType=" + responseType +
-                ", message=" + message +
-                '}';
     }
 }

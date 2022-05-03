@@ -1,15 +1,9 @@
 package Commands;
 
-import Client.ClientConnector;
 import Client.Request;
-import Client.RequestBuilder;
 import Server.Response;
-import Server.ServerExecutor;
 import Server.ServerINFO;
 
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.sql.SQLException;
 import java.util.Scanner;
 
 /**
@@ -27,16 +21,13 @@ public class InsertCommand extends ElementCommand {
     }
 
     @Override
-    public boolean execute(ServerExecutor.ExecuteState state, ServerINFO server) throws CommandException {
+    public void execute(ServerINFO server) throws CommandException {
         try {
             server.putMovie(key, readMovie);
         } catch (IllegalAccessException e) {
             throw new CommandException(getCommandName(), e.getMessage());
         }
-        if (state == ServerExecutor.ExecuteState.EXECUTE) {
-            server.getResponseBuilder().add("*put new element in the collection*");
-        }
-        return false;
+        server.getResponse().addMessage("*put new element in the collection*");
     }
 
     @Override
@@ -49,9 +40,9 @@ public class InsertCommand extends ElementCommand {
     }
 
     @Override
-    public void buildRequest() throws CommandException {
+    public void buildRequest(Request request) throws CommandException {
         InsertCommand command = new InsertCommand(getCommandName(), reader);
         command.key = key; command.readMovie = readMovie;
-        RequestBuilder.add(command);
+        request.addCommand(command);
     }
 }

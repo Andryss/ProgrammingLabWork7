@@ -1,7 +1,6 @@
 package Commands;
 
-import Client.RequestBuilder;
-import Server.ServerExecutor;
+import Client.Request;
 import Server.ServerINFO;
 
 /**
@@ -17,16 +16,12 @@ public class CountLessThenLengthCommand extends NameableCommand {
     }
 
     @Override
-    public boolean execute(ServerExecutor.ExecuteState state, ServerINFO server) throws CommandException {
-        if (state == ServerExecutor.ExecuteState.VALIDATE) {
-            return true;
-        }
-        server.getResponseBuilder().add("Found " +
+    public void execute(ServerINFO server) throws CommandException {
+        server.getResponse().addMessage("Found " +
                 server.getMovieCollection().values().stream()
                         .filter(movie -> movie.getLength() < length)
                         .count()
                 + " movies with length less than " + length);
-        return true;
     }
 
     @Override
@@ -42,9 +37,9 @@ public class CountLessThenLengthCommand extends NameableCommand {
     }
 
     @Override
-    public void buildRequest() throws CommandException {
+    public void buildRequest(Request request) throws CommandException {
         CountLessThenLengthCommand command = new CountLessThenLengthCommand(getCommandName());
         command.length = length;
-        RequestBuilder.add(command);
+        request.addCommand(command);
     }
 }

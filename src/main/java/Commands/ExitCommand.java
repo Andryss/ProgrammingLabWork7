@@ -1,6 +1,5 @@
 package Commands;
 
-import Server.ServerExecutor;
 import Server.ServerINFO;
 
 /**
@@ -14,8 +13,8 @@ public class ExitCommand extends NameableCommand {
     }
 
     @Override
-    public boolean execute(ServerExecutor.ExecuteState state, ServerINFO server) {
-        return false;
+    public void execute(ServerINFO server) throws CommandException {
+        throw new CommandException(getCommandName(), "command can't be executed");
     }
 
     @Override

@@ -1,15 +1,9 @@
 package Commands;
 
-import Client.ClientConnector;
 import Client.Request;
-import Client.RequestBuilder;
 import Server.Response;
-import Server.ServerExecutor;
 import Server.ServerINFO;
 
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.sql.SQLException;
 import java.util.Scanner;
 
 /**
@@ -27,22 +21,17 @@ public class ReplaceIfGreaterCommand extends ElementCommand {
     }
 
     @Override
-    public boolean execute(ServerExecutor.ExecuteState state, ServerINFO server) throws CommandException {
+    public void execute(ServerINFO server) throws CommandException {
         if (readMovie.compareTo(server.getMovieCollection().get(key)) > 0) {
             try {
                 server.putMovie(key, readMovie);
             } catch (IllegalAccessException e) {
                 throw new CommandException(getCommandName(), e.getMessage());
             }
-            if (state == ServerExecutor.ExecuteState.EXECUTE) {
-                server.getResponseBuilder().add("Element greater than the old one has been inserted");
-            }
+            server.getResponse().addMessage("Element greater than the old one has been inserted");
         } else {
-            if (state == ServerExecutor.ExecuteState.EXECUTE) {
-                server.getResponseBuilder().add("Nothing was happened");
-            }
+            server.getResponse().addMessage("Nothing was happened");
         }
-        return true;
     }
 
     @Override
@@ -53,9 +42,9 @@ public class ReplaceIfGreaterCommand extends ElementCommand {
     }
 
     @Override
-    public void buildRequest() throws CommandException {
+    public void buildRequest(Request request) throws CommandException {
         ReplaceIfGreaterCommand command = new ReplaceIfGreaterCommand(getCommandName(), reader);
         command.key = key; command.readMovie = readMovie;
-        RequestBuilder.add(command);
+        request.addCommand(command);
     }
 }

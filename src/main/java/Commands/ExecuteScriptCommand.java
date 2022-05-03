@@ -2,7 +2,7 @@ package Commands;
 
 import Client.File.FileExecutor;
 import Client.File.FileManager;
-import Server.ServerExecutor;
+import Client.Request;
 import Server.ServerINFO;
 
 import java.io.File;
@@ -23,7 +23,7 @@ public class ExecuteScriptCommand extends NameableCommand {
     }
 
     @Override
-    public boolean execute(ServerExecutor.ExecuteState state, ServerINFO server) throws CommandException {
+    public void execute(ServerINFO server) throws CommandException {
         throw new CommandException(getCommandName(), "\"" + getCommandName() + "\" can't be executed");
     }
 
@@ -44,9 +44,9 @@ public class ExecuteScriptCommand extends NameableCommand {
     }
 
     @Override
-    public void buildRequest() throws CommandException {
+    public void buildRequest(Request request) throws CommandException {
         try {
-            FileManager fileManager = new FileManager(file, caller);
+            FileManager fileManager = new FileManager(file, caller, request);
             fileManager.buildRequest();
         } catch (FileNotFoundException ignore) {
             //ignore

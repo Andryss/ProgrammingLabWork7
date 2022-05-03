@@ -28,7 +28,7 @@ public class ServerCollectionManager {
     private static final String usersTable = "users_335155";
     private static final String movieTable = "movie_335155";
 
-    public static void initialize() throws ClassNotFoundException, SQLException, FieldException, FileNotFoundException {
+    static void initialize() throws ClassNotFoundException, SQLException, FieldException, FileNotFoundException {
         Class.forName("org.postgresql.Driver");
         loadDBPrivates();
         connection = DriverManager.getConnection(String.format("jdbc:postgresql://%s/%s", dbHostName, dbName), dbUser, dbPassword);

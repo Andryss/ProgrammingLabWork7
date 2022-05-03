@@ -2,7 +2,7 @@ package Commands;
 
 import Client.ClientConnector;
 import Client.ClientController;
-import Client.Request;
+import Client.RequestImpl;
 import Client.RequestBuilder;
 import MovieObjects.Coordinates;
 import MovieObjects.FieldSetter;
@@ -186,7 +186,7 @@ public abstract class ElementCommand extends NameableCommand {
     private void sendRequestAndCheckElement() throws BadArgumentsException {
         try {
             Response response = ClientConnector.sendToServer(
-                    new Request(Request.RequestType.CHECK_ELEMENT,
+                    new RequestImpl(RequestImpl.RequestType.CHECK_ELEMENT,
                             RequestBuilder.getUserProfile(),
                             key));
             checkElement(response);

@@ -1,10 +1,7 @@
 package Commands;
 
-import Client.RequestBuilder;
-import Server.ServerExecutor;
+import Client.Request;
 import Server.ServerINFO;
-
-import java.sql.SQLException;
 
 /**
  * Command, which removes all elements whose key is less than given
@@ -18,7 +15,7 @@ public class RemoveLowerKeyCommand extends NameableCommand {
     }
 
     @Override
-    public boolean execute(ServerExecutor.ExecuteState state, ServerINFO server) throws CommandException {
+    public void execute(ServerINFO server) throws CommandException {
         server.getMovieCollection().keySet().stream()
                 .filter(key -> key < this.key)
                 .forEach(key -> {
@@ -28,10 +25,7 @@ public class RemoveLowerKeyCommand extends NameableCommand {
                         //ignore
                     }
                 });
-        if (state == ServerExecutor.ExecuteState.EXECUTE) {
-            server.getResponseBuilder().add("All your elements with key lower than \"" + key + "\" has been removed");
-        }
-        return true;
+        server.getResponse().addMessage("All your elements with key lower than \"" + key + "\" has been removed");
     }
 
     @Override
@@ -47,9 +41,9 @@ public class RemoveLowerKeyCommand extends NameableCommand {
     }
 
     @Override
-    public void buildRequest() throws CommandException {
+    public void buildRequest(Request request) throws CommandException {
         RemoveLowerKeyCommand command = new RemoveLowerKeyCommand(getCommandName());
         command.key = key;
-        RequestBuilder.add(command);
+        request.addCommand(command);
     }
 }

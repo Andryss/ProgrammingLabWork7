@@ -16,16 +16,17 @@ public class ServerManager {
     static {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
+                ServerHistoryManager.close();
                 ServerCollectionManager.close();
                 ServerConnector.close();
                 ServerController.info("All services closed");
             } catch (Throwable e) {
                 //ignore
             }
-        }, "CloseThread"));
+        }, "SeClosingThread"));
     }
 
-    public static void run(int port) throws IOException, FieldException, SQLException, ClassNotFoundException {
+    public static void run(int port) throws IOException, FieldException, SQLException, ClassNotFoundException, IllegalAccessException {
         ServerController.info("Initializations start");
         initializations(port);
         ServerController.info("Initializations completed");
@@ -38,10 +39,11 @@ public class ServerManager {
                 ServerController.error(e.getMessage(), e);
             }
         }, "ReceivingThread").start();
-        new Thread(ServerController::run, "ConsoleThread").start();
+        new Thread(ServerController::run, "SeConsoleThread").start();
     }
 
-    private static void initializations(int port) throws IOException, FieldException, SQLException, ClassNotFoundException {
+    private static void initializations(int port) throws IOException, FieldException, SQLException, ClassNotFoundException, IllegalAccessException {
+        ServerHistoryManager.initialize();
         ServerCollectionManager.initialize();
         ServerConnector.initialize(port);
         ServerExecutor.initialize();

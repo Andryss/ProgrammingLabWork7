@@ -1,13 +1,8 @@
 package Commands;
 
 import MovieObjects.Movie;
-import Server.ServerExecutor;
 import Server.ServerINFO;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Hashtable;
 
 /**
@@ -21,15 +16,11 @@ public class InfoCommand extends NameableCommand {
     }
 
     @Override
-    public boolean execute(ServerExecutor.ExecuteState state, ServerINFO server) throws CommandException {
-        if (state == ServerExecutor.ExecuteState.VALIDATE) {
-            return true;
-        }
+    public void execute(ServerINFO server) throws CommandException {
         Hashtable<Integer, Movie> collection = server.getMovieCollection();
-        server.getResponseBuilder()
-                .add("Collection type: " + collection.getClass().getName())
-                .add("Collection length: " + collection.size());
-        return true;
+        server.getResponse()
+                .addMessage("Collection type: " + collection.getClass().getName())
+                .addMessage("Collection length: " + collection.size());
     }
 
     @Override
