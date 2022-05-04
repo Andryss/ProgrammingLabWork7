@@ -34,7 +34,9 @@ public class ClientConnector {
 
     private static void checkConnection() throws IOException, ClassNotFoundException {
         try {
-            Response response = sendToServer(RequestBuilder.createNewRequest(Request.RequestType.CHECK_CONNECTION));
+            Response response = sendToServer(
+                    RequestBuilder.createNewRequest().setRequestType(Request.RequestType.CHECK_CONNECTION).build()
+            );
             if (response.getResponseType() != Response.ResponseType.CONNECTION_SUCCESSFUL) {
                 throw new IOException("Server has wrong logic: expected \"" +
                         Response.ResponseType.CONNECTION_SUCCESSFUL +

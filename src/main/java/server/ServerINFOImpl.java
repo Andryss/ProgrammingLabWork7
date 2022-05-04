@@ -85,6 +85,10 @@ public class ServerINFOImpl implements ServerINFO {
                 throw new IllegalAccessException("Movie already exists");
             } else if (movieCollection.size() >= 10) {
                 throw new IllegalAccessException("Collection limit (10) exceeded");
+            } else if (movieCollection.values().stream()
+                    .filter(m -> m.getOwner().equals(userProfile.getName()))
+                    .count() >= 3) {
+                throw new IllegalAccessException(userProfile.getName() + "'s elements count limit (3) exceeded");
             }
             movie.setOwner(userProfile.getName());
             return movieCollection.put(key, movie);

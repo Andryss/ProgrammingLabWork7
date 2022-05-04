@@ -6,10 +6,11 @@ import general.ServerINFO;
 /**
  * Command, which prints a list of available commands
  * @see NameableCommand
- * @see Command
+ * @see ParseCommand
  */
 public class HelpCommand extends NameableCommand {
 
+    @ParseCommand(name = "help", example = "help")
     public HelpCommand(String commandName) {
         super(commandName);
     }

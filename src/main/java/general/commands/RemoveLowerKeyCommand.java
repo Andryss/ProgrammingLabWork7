@@ -11,6 +11,7 @@ import general.ServerINFO;
 public class RemoveLowerKeyCommand extends NameableCommand {
     private Integer key;
 
+    @ParseCommand(name = "remove_lower_key", example = "remove_lower_key -13")
     public RemoveLowerKeyCommand(String commandName) {
         super(commandName);
     }

@@ -1,5 +1,6 @@
 import client.ClientController;
 import client.ClientManager;
+import general.commands.CommandException;
 
 import java.io.IOException;
 
@@ -10,7 +11,7 @@ public class ClientMain {
     public static void main(String[] args) {
         try {
             ClientManager.run(port);
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException | CommandException e) {
             ClientController.printlnErr(e.getMessage());
         }
     }

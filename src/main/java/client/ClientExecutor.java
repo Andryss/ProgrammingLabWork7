@@ -4,6 +4,7 @@ import general.ClientINFO;
 import general.commands.*;
 import general.Request;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -18,27 +19,14 @@ public class ClientExecutor {
     private static final ClientINFO clientINFO = new ClientINFOImpl();
     private static Request request;
 
-    static void initialize() {
+    static void initialize() throws IOException, CommandException {
         fillCommandMap();
     }
 
-    private static void fillCommandMap() {
-        commandMap.put("help", new HelpCommand("help"));
-        commandMap.put("info", new InfoCommand("info"));
-        commandMap.put("show", new ShowCommand("show"));
-        commandMap.put("insert", new InsertCommand("insert"));
-        commandMap.put("update", new UpdateCommand("update"));
-        commandMap.put("remove_key", new RemoveKeyCommand("remove_key"));
-        commandMap.put("clear", new ClearCommand("clear"));
-        //save --- FORBIDDEN!
-        commandMap.put("execute_script", new ExecuteScriptCommand("execute_script"));
-        commandMap.put("exit", new ExitCommand("exit"));
-        commandMap.put("history", new HistoryCommand("history"));
-        commandMap.put("replace_if_greater", new ReplaceIfGreaterCommand("replace_if_greater"));
-        commandMap.put("remove_lower_key", new RemoveLowerKeyCommand("remove_key_command"));
-        commandMap.put("group_counting_by_length", new GroupCountingByLengthCommand("group_counting_by_length"));
-        commandMap.put("count_less_than_length", new CountLessThenLengthCommand("count_less_than_length"));
-        commandMap.put("filter_by_mpaa_rating", new FilterByMpaaRatingCommand("filter_by_mpaa_rating"));
+    private static void fillCommandMap() throws IOException, CommandException {
+
+        CommandFiller.fillCommandMap(commandMap);
+
     }
 
     static void parseCommand(String inputLine) throws CommandException {
@@ -59,7 +47,10 @@ public class ClientExecutor {
             throw new UndefinedCommandException(commandName);
         }
         command.setArgs(clientINFO, args);
-        request = RequestBuilder.createNewRequest(Request.RequestType.EXECUTE_COMMAND, commandName);
+        request = RequestBuilder.createNewRequest()
+                .setRequestType(Request.RequestType.EXECUTE_COMMAND)
+                .setCommandName(commandName)
+                .build();
         command.buildRequest(request);
     }
 

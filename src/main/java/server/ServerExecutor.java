@@ -64,10 +64,10 @@ public class ServerExecutor {
                 ServerController.info("Unexpected request type: " + request.getRequestType());
             }
         } catch (NullPointerException e) {
-            Response response = ResponseBuilder.createNewResponse(
-                    Response.ResponseType.WRONG_REQUEST_FORMAT,
-                    "Wrong request format"
-            );
+            Response response = ResponseBuilder.createNewResponse()
+                    .setResponseType(Response.ResponseType.WRONG_REQUEST_FORMAT)
+                    .addMessage("Wrong request format")
+                    .build();
             new Thread(() -> ServerConnector.sendToClient(client, response), "SendingWFThread").start();
         }
 
@@ -78,10 +78,10 @@ public class ServerExecutor {
     }
 
     private void checkConnectionRequest() {
-        Response response = ResponseBuilder.createNewResponse(
-                Response.ResponseType.CONNECTION_SUCCESSFUL,
-                "Connection with server was successful"
-        );
+        Response response = ResponseBuilder.createNewResponse()
+                .setResponseType(Response.ResponseType.CONNECTION_SUCCESSFUL)
+                .addMessage("Connection with server was successful")
+                .build();
         new Thread(() -> ServerConnector.sendToClient(client, response), "SendingCCThread").start();
     }
 
@@ -89,23 +89,23 @@ public class ServerExecutor {
         Response response;
         if (ServerCollectionManager.isUserPresented(request.getUserProfile())) {
             if (authorizedUsers.contains(request.getUserProfile())) {
-                response = ResponseBuilder.createNewResponse(
-                        Response.ResponseType.LOGIN_FAILED,
-                        "User already authorized (multi-session is not supported)"
-                );
+                response = ResponseBuilder.createNewResponse()
+                        .setResponseType(Response.ResponseType.LOGIN_FAILED)
+                        .addMessage("User already authorized (multi-session is not supported)")
+                        .build();
             } else {
                 authorizedUsers.add(request.getUserProfile());
-                response = ResponseBuilder.createNewResponse(
-                        Response.ResponseType.LOGIN_SUCCESSFUL,
-                        "User successfully logged in"
-                );
+                response = ResponseBuilder.createNewResponse()
+                        .setResponseType(Response.ResponseType.LOGIN_SUCCESSFUL)
+                        .addMessage("User successfully logged in")
+                        .build();
                 ServerHistoryManager.updateUser(request.getUserProfile());
             }
         } else {
-            response = ResponseBuilder.createNewResponse(
-                    Response.ResponseType.LOGIN_FAILED,
-                    "Incorrect login or password"
-            );
+            response = ResponseBuilder.createNewResponse()
+                    .setResponseType(Response.ResponseType.LOGIN_FAILED)
+                    .addMessage("Incorrect login or password")
+                    .build();
         }
         new Thread(() -> ServerConnector.sendToClient(client, response), "SendingLUThread").start();
     }
@@ -126,28 +126,28 @@ public class ServerExecutor {
     private void checkElementRequest() {
         Response response;
         if (authorizedUsers.stream().noneMatch((u) -> u.equals(request.getUserProfile()))) {
-            response = ResponseBuilder.createNewResponse(
-                    Response.ResponseType.CHECKING_FAILED,
-                    "User isn't logged in yet (or connection support time is out)"
-            );
+            response = ResponseBuilder.createNewResponse()
+                    .setResponseType(Response.ResponseType.CHECKING_FAILED)
+                    .addMessage("User isn't logged in yet (or connection support time is out)")
+                    .build();
         } else {
             Movie movie = ServerCollectionManager.getMovie(request.getCheckingIndex());
             if (movie == null) {
-                response = ResponseBuilder.createNewResponse(
-                        Response.ResponseType.ELEMENT_NOT_PRESENTED,
-                        "Movie with key \"" + request.getCheckingIndex() + "\" doesn't exist"
-                );
+                response = ResponseBuilder.createNewResponse()
+                        .setResponseType(Response.ResponseType.ELEMENT_NOT_PRESENTED)
+                        .addMessage("Movie with key \"" + request.getCheckingIndex() + "\" doesn't exist")
+                        .build();
             } else {
                 if (!movie.getOwner().equals(request.getUserProfile().getName())) {
-                    response = ResponseBuilder.createNewResponse(
-                            Response.ResponseType.PERMISSION_DENIED,
-                            "User \"" + request.getUserProfile().getName() + "\" doesn't have permission to update movie with key \"" + request.getCheckingIndex() + "\""
-                    );
+                    response = ResponseBuilder.createNewResponse()
+                            .setResponseType(Response.ResponseType.PERMISSION_DENIED)
+                            .addMessage("User \"" + request.getUserProfile().getName() + "\" doesn't have permission to update movie with key \"" + request.getCheckingIndex() + "\"")
+                            .build();
                 } else {
-                    response = ResponseBuilder.createNewResponse(
-                            Response.ResponseType.CHECKING_SUCCESSFUL,
-                            "User \"" + request.getUserProfile().getName() + "\" have permission to update movie with key \"" + request.getCheckingIndex() + "\""
-                    );
+                    response = ResponseBuilder.createNewResponse()
+                            .setResponseType(Response.ResponseType.CHECKING_SUCCESSFUL)
+                            .addMessage("User \"" + request.getUserProfile().getName() + "\" have permission to update movie with key \"" + request.getCheckingIndex() + "\"")
+                            .build();
                 }
             }
             ServerHistoryManager.updateUser(request.getUserProfile());
@@ -159,16 +159,16 @@ public class ServerExecutor {
         Response response;
         long newUserID = ServerCollectionManager.registerUser(request.getUserProfile());
         if (newUserID == -1) {
-            response = ResponseBuilder.createNewResponse(
-                    Response.ResponseType.REGISTER_FAILED,
-                    "User is already registered"
-            );
+            response = ResponseBuilder.createNewResponse()
+                    .setResponseType(Response.ResponseType.REGISTER_FAILED)
+                    .addMessage("User is already registered")
+                    .build();
         } else {
             authorizedUsers.add(request.getUserProfile());
-            response = ResponseBuilder.createNewResponse(
-                    Response.ResponseType.REGISTER_SUCCESSFUL,
-                    "New user successfully registered"
-            );
+            response = ResponseBuilder.createNewResponse()
+                    .setResponseType(Response.ResponseType.REGISTER_SUCCESSFUL)
+                    .addMessage("New user successfully registered")
+                    .build();
             ServerHistoryManager.updateUser(request.getUserProfile());
         }
         new Thread(() -> ServerConnector.sendToClient(client, response), "SendingRUThread").start();
@@ -177,14 +177,14 @@ public class ServerExecutor {
     private void executeCommandRequest() {
         Response response;
         if (authorizedUsers.stream().noneMatch((u) -> u.equals(request.getUserProfile()))) {
-            response = ResponseBuilder.createNewResponse(
-                    Response.ResponseType.EXECUTION_FAILED,
-                    "User isn't logged in yet (or connection support time is out)"
-            );
+            response = ResponseBuilder.createNewResponse()
+                    .setResponseType(Response.ResponseType.EXECUTION_FAILED)
+                    .addMessage("User isn't logged in yet (or connection support time is out)")
+                    .build();
         } else {
-            response = ResponseBuilder.createNewResponse(
-                    Response.ResponseType.EXECUTION_SUCCESSFUL
-            );
+            response = ResponseBuilder.createNewResponse()
+                    .setResponseType(Response.ResponseType.EXECUTION_SUCCESSFUL)
+                    .build();
             ServerHistoryManager.updateUser(request.getUserProfile());
             serverINFO = new ServerINFOImpl(request.getUserProfile(), response);
 
@@ -200,10 +200,10 @@ public class ServerExecutor {
                 response.addMessage("\u001B[32m" + "SUCCESS: command \"" + request.getCommandName() + "\" successfully completed" + "\u001B[0m");
                 ServerHistoryManager.addUserHistory(request.getUserProfile(), request.getCommandName());
             } catch (CommandException e) {
-                response = ResponseBuilder.createNewResponse(
-                        Response.ResponseType.EXECUTION_FAILED,
-                        e.getMessage()
-                );
+                response = ResponseBuilder.createNewResponse()
+                        .setResponseType(Response.ResponseType.EXECUTION_FAILED)
+                        .addMessage(e.getMessage())
+                        .build();
             }
         }
         Response finalResponse = response;

@@ -11,8 +11,10 @@ public class ServerMain {
             ServerManager.run(port);
         } catch (FieldException e) {
             ServerController.error("Problems with Movie File: " + e.getMessage());
+            System.exit(0);
         } catch (Throwable e) {
             ServerController.error(e.getMessage());
+            System.exit(0);
         }
     }
 }

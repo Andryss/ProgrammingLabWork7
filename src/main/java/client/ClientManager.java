@@ -12,8 +12,9 @@ import java.util.NoSuchElementException;
 
 /**
  * <p>ClientManager consist of main client logic:</p>
- * <p>1) Connection step</p>
- * <p>2) Login or register step</p>
+ * <p>0) Initialization step</p>
+ * <p>1) Create connection step</p>
+ * <p>2) Login/register user step</p>
  * <p>3) Execution step</p>
  *
  * <p>Execution step consist of:</p>
@@ -24,14 +25,19 @@ import java.util.NoSuchElementException;
  */
 public class ClientManager {
 
-    public static void run(int port) throws IOException, ClassNotFoundException {
+    public static void run(int port) throws IOException, ClassNotFoundException, CommandException {
         try {
+            initializationStep();
             connectionStep(port);
             loginRegisterStep();
             executionStep();
         } catch (NoSuchElementException e) {
             ClientController.printlnErr("Incorrect input (EOF). Try not to be so unpredictable!");
         }
+    }
+
+    private static void initializationStep() throws IOException, CommandException {
+        ClientExecutor.initialize();
     }
 
     private static void connectionStep(int port) throws IOException, ClassNotFoundException {
@@ -95,11 +101,12 @@ public class ClientManager {
         }
         RequestBuilder.setUserProfile(userProfile);
         try {
-            Response response = ClientConnector.sendToServer(RequestBuilder.createNewRequest(requestType));
+            Response response = ClientConnector.sendToServer(
+                    RequestBuilder.createNewRequest().setRequestType(requestType).build()
+            );
             if (response.getResponseType() == responseTypeFail) {
                 ClientController.printlnErr(response.getMessage());
             } else if (response.getResponseType() == responseTypeSuccess) {
-                ClientExecutor.initialize();
                 addLogoutHook();
                 return true;
             } else {
@@ -120,7 +127,9 @@ public class ClientManager {
     private static void addLogoutHook() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
-                ClientConnector.sendRequest(RequestBuilder.createNewRequest(Request.RequestType.LOGOUT_USER));
+                ClientConnector.sendRequest(
+                        RequestBuilder.createNewRequest().setRequestType(Request.RequestType.LOGOUT_USER).build()
+                );
             } catch (IOException e) {
                 //ignore
             }

@@ -131,7 +131,7 @@ public class ServerCollectionManager {
     static void close() {
         try {
             connection.close();
-        } catch (SQLException e) {
+        } catch (Throwable e) {
             // ignore
         }
     }
@@ -231,6 +231,14 @@ public class ServerCollectionManager {
             throw new IllegalAccessException("Movie with key \"" + key + "\" already exists");
         } else if (movieCollection.size() >= 10) {
             throw new IllegalAccessException("Collection limit (10) exceeded");
+        } else {
+            @SuppressWarnings("unchecked")
+            Hashtable<Integer,Movie> hashtable = (Hashtable<Integer, Movie>) movieCollection.clone();
+            if (hashtable.values().stream()
+                    .filter(m -> m.getOwner().equals(userProfile.getName()))
+                    .count() >= 3) {
+                throw new IllegalAccessException(userProfile.getName() + "'s elements count limit (3) exceeded");
+            }
         }
         readWriteLock.lock();
         try {

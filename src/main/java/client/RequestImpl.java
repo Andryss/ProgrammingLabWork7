@@ -13,24 +13,26 @@ import java.util.Queue;
  * Request class contains all information client can send to the server in one class
  */
 public class RequestImpl implements Serializable, Request {
-    private final RequestType requestType;
-    private final UserProfile userProfile;
+    private RequestType requestType;
+    private UserProfile userProfile;
     private Integer checkingIndex;
     private String commandName;
-    private final Queue<Command> commandQueue = new LinkedList<>();
+    private Queue<Command> commandQueue;
 
-    public RequestImpl(RequestType requestType, UserProfile userProfile) {
-        this.requestType = requestType;
+    public RequestImpl(UserProfile userProfile) {
         this.userProfile = userProfile;
     }
 
-    public RequestImpl(RequestType requestType, UserProfile userProfile, int checkingIndex) {
-        this(requestType, userProfile);
+    public void setRequestType(RequestType requestType) {
+        this.requestType = requestType;
+    }
+    public void setUserProfile(UserProfile userProfile) {
+        this.userProfile = userProfile;
+    }
+    public void setCheckingIndex(Integer checkingIndex) {
         this.checkingIndex = checkingIndex;
     }
-
-    public RequestImpl(RequestType requestType, UserProfile userProfile, String commandName) {
-        this(requestType, userProfile);
+    public void setCommandName(String commandName) {
         this.commandName = commandName;
     }
 
@@ -57,7 +59,10 @@ public class RequestImpl implements Serializable, Request {
 
     @Override
     public void addCommand(Command command) throws CommandException {
-        if (commandQueue.size() > 20) {
+        if (commandQueue == null) {
+            commandQueue = new LinkedList<>();
+        }
+        if (commandQueue.size() >= 20) {
             throw new CommandException("", "ERROR: Possible limit of command queue (20) exceeded");
         }
         commandQueue.add(command);

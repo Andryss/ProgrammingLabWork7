@@ -12,6 +12,7 @@ public class CountLessThenLengthCommand extends NameableCommand {
 
     private int length;
 
+    @ParseCommand(name = "count_less_than_length", example = "count_less_than_length 90")
     public CountLessThenLengthCommand(String commandName) {
         super(commandName);
     }

@@ -11,6 +11,7 @@ import java.util.LinkedList;
  */
 public class HistoryCommand extends NameableCommand {
 
+    @ParseCommand(name = "history", example = "history")
     public HistoryCommand(String commandName) {
         super(commandName);
     }

@@ -12,6 +12,7 @@ import java.util.Hashtable;
  */
 public class InfoCommand extends NameableCommand {
 
+    @ParseCommand(name = "info", example = "info")
     public InfoCommand(String commandName) {
         super(commandName);
     }

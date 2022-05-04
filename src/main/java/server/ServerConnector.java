@@ -41,7 +41,7 @@ public class ServerConnector {
         try {
             channel.close();
             selector.close();
-        } catch (IOException e) {
+        } catch (Throwable e) {
             // ignore
         }
     }

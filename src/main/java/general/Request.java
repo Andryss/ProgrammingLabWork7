@@ -24,7 +24,7 @@ public interface Request {
     void addCommand(Command command) throws CommandException;
 
     /**
-     * Represent type of client request
+     * Represent type of possible client requests
      */
     enum RequestType {
         CHECK_CONNECTION,

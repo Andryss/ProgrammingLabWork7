@@ -9,7 +9,8 @@ import java.io.FileNotFoundException;
 /**
  * <p>FileManager consist of main file reading logic:</p>
  * <p>1) Read line from file</p>
- * <p>2) Try to parse command build Request</p>
+ * <p>2) Try to parse command and build Request</p>
+ * <p>3) If something went wrong - throw Exception</p>
  */
 public class FileManager {
 

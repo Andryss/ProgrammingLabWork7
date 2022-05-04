@@ -9,6 +9,7 @@ import general.ServerINFO;
  */
 public class ClearCommand extends NameableCommand {
 
+    @ParseCommand(name = "clear", example = "clear")
     public ClearCommand(String commandName) {
         super(commandName);
     }

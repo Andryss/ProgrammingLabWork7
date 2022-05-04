@@ -6,12 +6,25 @@ import general.Response;
  * Global class, which build response to client
  */
 public class ResponseBuilder {
+    private final ResponseImpl response = new ResponseImpl();
 
-    static Response createNewResponse(Response.ResponseType responseType) {
-        return new ResponseImpl(responseType);
+    private ResponseBuilder() {}
+
+    public static ResponseBuilder createNewResponse() {
+        return new ResponseBuilder();
     }
 
-    static Response createNewResponse(Response.ResponseType responseType, String line) {
-        return createNewResponse(responseType).addMessage(line);
+    public ResponseBuilder setResponseType(Response.ResponseType responseType) {
+        response.setResponseType(responseType);
+        return this;
+    }
+
+    public ResponseBuilder addMessage(String line) {
+        response.addMessage(line);
+        return this;
+    }
+
+    public Response build() {
+        return response;
     }
 }

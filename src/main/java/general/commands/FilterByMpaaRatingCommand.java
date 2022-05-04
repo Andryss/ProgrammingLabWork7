@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 public class FilterByMpaaRatingCommand extends NameableCommand {
     private Movie.MpaaRating mpaaRating;
 
+    @ParseCommand(name = "filter_by_mpaa_rating", example = "filter_by_mpaa_rating G")
     public FilterByMpaaRatingCommand(String commandName) {
         super(commandName);
     }
@@ -42,7 +43,7 @@ public class FilterByMpaaRatingCommand extends NameableCommand {
         try {
             mpaaRating = Movie.MpaaRating.valueOf(args[0]);
         } catch (IllegalArgumentException e) {
-            throw new BadArgumentsFormatException(getCommandName(), "value must be one of: " + Arrays.toString(Movie.MpaaRating.values()));
+            throw new BadArgumentsFormatException(getCommandName(), "one of: " + Arrays.toString(Movie.MpaaRating.values()));
         }
     }
 

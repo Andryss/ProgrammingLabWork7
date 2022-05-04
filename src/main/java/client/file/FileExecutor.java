@@ -12,10 +12,11 @@ import java.util.NoSuchElementException;
 
 /**
  * <p>FileExecutor implements (2) step in FileManager:</p>
- * <p>*** do same things as ClientExecutor but with some changes in commands ***</p>
+ * <p>*** do same things as ClientExecutor but with some changes in ClientINFO (more sensitive to any Exceptions) ***</p>
  */
 public class FileExecutor {
-    private HashMap<String, Command> commandMap = new HashMap<>();
+    @SuppressWarnings("unchecked")
+    private final HashMap<String, Command> commandMap = (HashMap<String, Command>) ClientExecutor.getCommandMap().clone();
     private final FileController controller;
     private final ClientINFO clientINFO;
     private final FileExecutor caller;
@@ -31,13 +32,6 @@ public class FileExecutor {
     }
 
     private void fillCommandMap() {
-        @SuppressWarnings("unchecked")
-        HashMap<String, Command> hashtable = (HashMap<String, Command>) ClientExecutor.getCommandMap().clone();
-        commandMap = hashtable;
-        commandMap.put("insert", new InsertCommand("insert"));
-        commandMap.put("update", new UpdateCommand("update"));
-        commandMap.put("execute_script", new ExecuteScriptCommand("execute_script"));
-        commandMap.put("replace_if_greater", new ReplaceIfGreaterCommand("replace_if_greater"));
         commandMap.put("exit", new NameableCommand("exit") {
             @Override
             public void execute(ServerINFO server) throws CommandException {
@@ -87,11 +81,9 @@ public class FileExecutor {
     public FileExecutor getCaller() {
         return caller;
     }
-
     public String getFileName() {
         return controller.getFileName();
     }
-
     public int getCommandNumber() {
         return commandNumber;
     }

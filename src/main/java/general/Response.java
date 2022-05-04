@@ -12,7 +12,7 @@ public interface Response {
     String getMessage();
 
     /**
-     * Represent type of server response
+     * Represent type of possible server responses
      */
     enum ResponseType {
         WRONG_REQUEST_FORMAT,

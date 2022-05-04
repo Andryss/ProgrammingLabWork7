@@ -18,6 +18,7 @@ public class ExecuteScriptCommand extends NameableCommand {
     private File file;
     private FileExecutor caller;
 
+    @ParseCommand(name = "execute_script", example = "execute_script someScript")
     public ExecuteScriptCommand(String commandName) {
         super(commandName);
     }

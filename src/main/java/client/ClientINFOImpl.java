@@ -8,6 +8,9 @@ import general.Response;
 
 import java.io.IOException;
 
+/**
+ * @see ClientINFO
+ */
 public class ClientINFOImpl implements ClientINFO {
     protected FileExecutor caller;
 
@@ -18,7 +21,10 @@ public class ClientINFOImpl implements ClientINFO {
 
     @Override
     public Request createNewRequest(Request.RequestType requestType, Integer checkingIndex) {
-        return RequestBuilder.createNewRequest(requestType, checkingIndex);
+        return RequestBuilder.createNewRequest()
+                .setRequestType(requestType)
+                .setCheckingIndex(checkingIndex)
+                .build();
     }
 
     @Override

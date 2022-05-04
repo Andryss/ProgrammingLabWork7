@@ -9,11 +9,16 @@ import java.util.ArrayList;
  * Response class contains all information the server can send to client in one class
  */
 public class ResponseImpl implements Serializable, Response {
-    private final ResponseType responseType;
+    private ResponseType responseType;
     private ArrayList<String> message;
-    private static final Response emptyResponse = new ResponseImpl(ResponseType.CONNECTION_SUCCESSFUL).addMessage("*empty response*");
+    private static final Response emptyResponse = ResponseBuilder.createNewResponse()
+            .setResponseType(ResponseType.CONNECTION_SUCCESSFUL)
+            .addMessage("*empty response*")
+            .build();
 
-    public ResponseImpl(ResponseType responseType) {
+    public ResponseImpl() {}
+
+    public void setResponseType(ResponseType responseType) {
         this.responseType = responseType;
     }
 

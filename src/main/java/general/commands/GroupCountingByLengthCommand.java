@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
  */
 public class GroupCountingByLengthCommand extends NameableCommand {
 
+    @ParseCommand(name = "group_counting_by_length", example = "group_counting_by_length")
     public GroupCountingByLengthCommand(String commandName) {
         super(commandName);
     }

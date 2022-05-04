@@ -4,14 +4,13 @@ import general.Request;
 import general.Response;
 import general.ServerINFO;
 
-import java.util.Scanner;
-
 /**
  * Command, which adds new element with given key
  * @see NameableCommand
  */
 public class InsertCommand extends ElementCommand {
 
+    @ParseCommand(name = "insert", example = "insert 5555")
     public InsertCommand(String commandName) {
         super(commandName);
     }

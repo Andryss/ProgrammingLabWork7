@@ -4,14 +4,13 @@ import general.Request;
 import general.Response;
 import general.ServerINFO;
 
-import java.util.Scanner;
-
 /**
  * Command, which updates an element with given id
  * @see NameableCommand
  */
 public class UpdateCommand extends ElementCommand {
 
+    @ParseCommand(name = "update", example = "update 30")
     public UpdateCommand(String commandName) {
         super(commandName);
     }

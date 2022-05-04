@@ -9,6 +9,7 @@ import general.ServerINFO;
  */
 public class ExitCommand extends NameableCommand {
 
+    @ParseCommand(name = "exit", example = "exit")
     public ExitCommand(String commandName) {
         super(commandName);
     }

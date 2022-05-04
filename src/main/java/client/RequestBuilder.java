@@ -8,19 +8,31 @@ import general.Request;
  */
 public class RequestBuilder {
     private static UserProfile userProfile;
+    private final RequestImpl request = new RequestImpl(userProfile);
 
     private RequestBuilder() {}
 
-    public static Request createNewRequest(Request.RequestType requestType) {
-        return new RequestImpl(requestType, userProfile);
+    public static RequestBuilder createNewRequest() {
+        return new RequestBuilder();
     }
 
-    public static Request createNewRequest(Request.RequestType requestType, Integer checkingIndex) {
-        return new RequestImpl(requestType, userProfile, checkingIndex);
+    public RequestBuilder setRequestType(Request.RequestType requestType) {
+        request.setRequestType(requestType);
+        return this;
     }
 
-    public static Request createNewRequest(Request.RequestType requestType, String commandName) {
-        return new RequestImpl(requestType, userProfile, commandName);
+    public RequestBuilder setCheckingIndex(Integer checkingIndex) {
+        request.setCheckingIndex(checkingIndex);
+        return this;
+    }
+
+    public RequestBuilder setCommandName(String commandName) {
+        request.setCommandName(commandName);
+        return this;
+    }
+
+    public Request build() {
+        return request;
     }
 
     public static void setUserProfile(UserProfile userProfile) {

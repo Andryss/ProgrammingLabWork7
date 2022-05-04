@@ -4,14 +4,13 @@ import general.Request;
 import general.Response;
 import general.ServerINFO;
 
-import java.util.Scanner;
-
 /**
  * Command, which replaces an element by key if the new value is greater than the old one
  * @see NameableCommand
  */
 public class ReplaceIfGreaterCommand extends ElementCommand {
 
+    @ParseCommand(name = "replace_if_greater", example = "replace_if_greater 600500")
     public ReplaceIfGreaterCommand(String commandName) {
         super(commandName);
     }
@@ -20,7 +19,7 @@ public class ReplaceIfGreaterCommand extends ElementCommand {
     public void execute(ServerINFO server) throws CommandException {
         if (readMovie.compareTo(server.getMovieCollection().get(key)) > 0) {
             try {
-                server.putMovie(key, readMovie);
+                server.updateMovie(key, readMovie);
             } catch (IllegalAccessException e) {
                 throw new CommandException(getCommandName(), e.getMessage());
             }
