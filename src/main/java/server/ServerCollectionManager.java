@@ -132,7 +132,7 @@ public class ServerCollectionManager {
         try {
             connection.close();
         } catch (SQLException e) {
-            ServerController.error(e.getMessage());
+            // ignore
         }
     }
 
@@ -357,7 +357,7 @@ public class ServerCollectionManager {
     static void removeAllMovies() {
         readWriteLock.lock();
         try {
-            statement.executeQuery(String.format("DELETE * FROM %s", movieTable));
+            statement.executeQuery(String.format("DELETE FROM %s", movieTable));
         } catch (SQLException e) {
             ServerController.error(e.getMessage());
         } finally {

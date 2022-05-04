@@ -36,6 +36,14 @@ public class ServerExecutor {
         executorService = Executors.newCachedThreadPool();
     }
 
+    static void close() {
+        try {
+            executorService.shutdown();
+        } catch (Throwable e) {
+            // ignore
+        }
+    }
+
     void executeRequest() {
         ServerController.info("Request starts executing");
 

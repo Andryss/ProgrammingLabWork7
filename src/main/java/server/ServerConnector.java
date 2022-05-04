@@ -42,27 +42,27 @@ public class ServerConnector {
             channel.close();
             selector.close();
         } catch (IOException e) {
-            ServerController.error(e.getMessage());
+            // ignore
         }
     }
 
     public static void run() throws IOException, ClassNotFoundException {
         ServerController.info("------------------------------- Ready for receiving -------------------------------");
-        try {
             while (true) {
-                selector.select();
-                Set<SelectionKey> keys = selector.selectedKeys();
-                for (Iterator<SelectionKey> keyIterator = keys.iterator(); keyIterator.hasNext(); keyIterator.remove()) {
-                    SelectionKey key = keyIterator.next();
-                    if (key.isValid() && key.isReadable()) {
-                        receiveRequest();
-                        ServerController.info("------------------------------- Ready for receiving -------------------------------");
+                try {
+                    selector.select();
+                    Set<SelectionKey> keys = selector.selectedKeys();
+                    for (Iterator<SelectionKey> keyIterator = keys.iterator(); keyIterator.hasNext(); keyIterator.remove()) {
+                        SelectionKey key = keyIterator.next();
+                        if (key.isValid() && key.isReadable()) {
+                            receiveRequest();
+                            ServerController.info("------------------------------- Ready for receiving -------------------------------");
+                        }
                     }
+                } catch (ClosedSelectorException e) {
+                    break;
                 }
             }
-        } catch (ClosedSelectorException e) {
-            //ignore
-        }
     }
 
     private static void receiveRequest() throws IOException, ClassNotFoundException {

@@ -2,23 +2,27 @@ package server;
 
 import general.element.UserProfile;
 
+import java.beans.XMLDecoder;
+import java.beans.XMLEncoder;
 import java.io.*;
 import java.util.Hashtable;
 import java.util.LinkedList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class ServerHistoryManager {
     private static Hashtable<UserProfile, Long> lastModifiedTime;
-    private static final String historyFilename = "UserHistories";
-    private static Hashtable<UserProfile, LinkedList<String>> userHistories;
-    private static Thread watchingThread;
+    private static final String historyFilename = "UserHistories.xml";
+    private static Hashtable<String, LinkedList<String>> userHistories;
+    private static final ScheduledExecutorService watchingThread = Executors.newSingleThreadScheduledExecutor();
 
     private ServerHistoryManager() {}
 
-    static void initialize() throws IOException, ClassNotFoundException, IllegalAccessException {
+    static void initialize() throws IOException, IllegalAccessException {
         loadUserHistories();
         lastModifiedTime = new Hashtable<>();
-        watchingThread = new Thread(ServerHistoryManager::watchAndDeleteAFKUsers, "LogoutAFKThread");
-        watchingThread.start();
+        watchingThread.scheduleAtFixedRate(ServerHistoryManager::watchAndDeleteAFKUsers, 10, 10, TimeUnit.SECONDS);
     }
 
     static void updateUser(UserProfile userProfile) {
@@ -30,96 +34,94 @@ public class ServerHistoryManager {
     }
 
     static void addUserHistory(UserProfile userProfile, String command) {
-        if (!userHistories.containsKey(userProfile)) {
-            userHistories.put(userProfile, new LinkedList<>());
+        if (!userHistories.containsKey(userProfile.getName())) {
+            userHistories.put(userProfile.getName(), new LinkedList<>());
         }
-        LinkedList<String> history = userHistories.get(userProfile);
+        LinkedList<String> history = userHistories.get(userProfile.getName());
         history.add(command);
-        if (history.size() > 16) history.removeFirst();
+        if (history.size() > 15) history.removeFirst();
     }
 
     static void clearUserHistory(String username) {
         @SuppressWarnings("unchecked")
-        Hashtable<UserProfile, LinkedList<String>> hashtable = (Hashtable<UserProfile, LinkedList<String>>) userHistories.clone();
+        Hashtable<String, LinkedList<String>> hashtable = (Hashtable<String, LinkedList<String>>) userHistories.clone();
         hashtable.keySet().stream()
-                .filter(u -> u.getName().equals(username))
+                .filter(u -> u.equals(username))
                 .forEach(u -> userHistories.remove(u));
     }
 
     public static LinkedList<String> getUserHistory(UserProfile userProfile) {
         @SuppressWarnings("unchecked")
-        LinkedList<String> list = (LinkedList<String>) userHistories.get(userProfile).clone();
+        LinkedList<String> list = (LinkedList<String>) userHistories.get(userProfile.getName()).clone();
         return list;
     }
 
     private static void saveUserHistories() {
         try {
             File file = new File(historyFilename);
-            if (!file.exists()) {
-                file.createNewFile();
-            } else if (!file.isFile()) {
-                ServerController.info("Can't save histories, because can't create file with name \"" + historyFilename + "\"");
-                return;
-            } else if (!file.canWrite()) {
-                ServerController.info("Can't save histories, because permission to write denied");
-                return;
+            if (!file.createNewFile()) {
+                if (!file.isFile()) {
+                    ServerController.info("Can't save histories, because can't create file with name \"" + historyFilename + "\"");
+                    return;
+                } else if (!file.canWrite()) {
+                    ServerController.info("Can't save histories, because permission to write denied");
+                    return;
+                }
             }
-            ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream(historyFilename));
-            stream.writeObject(userHistories);
-            stream.flush();
-            stream.close();
+            try (XMLEncoder encoder = new XMLEncoder(new FileOutputStream(historyFilename))) {
+                encoder.writeObject(userHistories);
+            }
         } catch (IOException e) {
             //ignore
         }
     }
 
     static void close() {
-        saveUserHistories();
-        watchingThread.interrupt();
+        try {
+            saveUserHistories();
+            watchingThread.shutdown();
+        } catch (Throwable e) {
+            // ignore
+        }
     }
 
-    private static void loadUserHistories() throws IllegalAccessException, ClassNotFoundException, IOException {
+    private static void loadUserHistories() throws IllegalAccessException, IOException {
         try {
             File file = new File(historyFilename);
-            if (!file.exists()) {
-                file.createNewFile();
-                userHistories = new Hashtable<>();
-            } else if (!file.isFile()) {
-                throw new FileNotFoundException("Can't load histories, because file with name \"" + historyFilename + "\" can't be created");
-            } else if (!file.canRead()) {
-                throw new IllegalAccessException("Can't load histories, because permission to read denied");
+            if (!file.createNewFile()) {
+                if (!file.isFile()) {
+                    throw new FileNotFoundException("Can't load histories, because file with name \"" + historyFilename + "\" can't be created");
+                }
+                if (!file.canRead()) {
+                    throw new IllegalAccessException("Can't load histories, because permission to read denied");
+                } else {
+                    try (XMLDecoder decoder = new XMLDecoder(new FileInputStream(file))) {
+                        @SuppressWarnings("unchecked")
+                        Hashtable<String, LinkedList<String>> hashtable = (Hashtable<String, LinkedList<String>>) decoder.readObject();
+                        userHistories = hashtable;
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        userHistories = new Hashtable<>();
+                    }
+                }
             } else {
-                ObjectInputStream stream = new ObjectInputStream(new FileInputStream(file));
-                @SuppressWarnings("unchecked")
-                Hashtable<UserProfile, LinkedList<String>> hashtable = (Hashtable<UserProfile, LinkedList<String>>) stream.readObject();
-                userHistories = hashtable;
-                stream.close();
+                userHistories = new Hashtable<>();
             }
         } catch (IOException e) {
             throw new IOException("Can't load user histories: " + e.getMessage());
-        } catch (ClassNotFoundException e) {
-            throw new ClassNotFoundException("Can't read anything from \"" + historyFilename + "\"");
         }
     }
 
     private static void watchAndDeleteAFKUsers() {
-        try {
-            while (true) {
-                Thread.sleep(10_000);
-                long now = System.currentTimeMillis();
-                @SuppressWarnings("unchecked")
-                Hashtable<UserProfile,Long> hashtable = (Hashtable<UserProfile,Long>) lastModifiedTime.clone();
-                hashtable.forEach((u,t) -> {
-                    if (now - t > 60_000 * 5) {
-                        ServerExecutor.logoutUser(u.getName());
-                        lastModifiedTime.remove(u);
-                        ServerController.info("User " + u.getName() + " logout (reason: AFK)");
-                    }
-                });
+        long now = System.currentTimeMillis();
+        @SuppressWarnings("unchecked")
+        Hashtable<UserProfile,Long> hashtable = (Hashtable<UserProfile,Long>) lastModifiedTime.clone();
+        hashtable.forEach((u,t) -> {
+            if (now - t > 60_000 * 5) {
+                ServerExecutor.logoutUser(u.getName());
+                lastModifiedTime.remove(u);
+                ServerController.info("User \"" + u.getName() + "\" logout (reason: AFK)");
             }
-        } catch (InterruptedException e) {
-            //ignore
-        }
+        });
     }
 
 }

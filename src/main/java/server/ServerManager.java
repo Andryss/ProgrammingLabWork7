@@ -15,14 +15,11 @@ public class ServerManager {
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                ServerHistoryManager.close();
-                ServerCollectionManager.close();
-                ServerConnector.close();
-                ServerController.info("All services closed");
-            } catch (Throwable e) {
-                //ignore
-            }
+            ServerHistoryManager.close();
+            ServerCollectionManager.close();
+            ServerConnector.close();
+            ServerExecutor.close();
+            ServerController.info("All services closed");
         }, "SeClosingThread"));
     }
 
