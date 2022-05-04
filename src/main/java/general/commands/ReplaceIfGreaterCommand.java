@@ -12,12 +12,8 @@ import java.util.Scanner;
  */
 public class ReplaceIfGreaterCommand extends ElementCommand {
 
-    public ReplaceIfGreaterCommand(String commandName, Scanner reader) {
-        this(commandName, reader, false);
-    }
-
-    public ReplaceIfGreaterCommand(String commandName, Scanner reader, boolean readingFromFile) {
-        super(commandName, reader, readingFromFile);
+    public ReplaceIfGreaterCommand(String commandName) {
+        super(commandName);
     }
 
     @Override
@@ -43,7 +39,7 @@ public class ReplaceIfGreaterCommand extends ElementCommand {
 
     @Override
     public void buildRequest(Request request) throws CommandException {
-        ReplaceIfGreaterCommand command = new ReplaceIfGreaterCommand(getCommandName(), reader);
+        ReplaceIfGreaterCommand command = new ReplaceIfGreaterCommand(getCommandName());
         command.key = key; command.readMovie = readMovie;
         request.addCommand(command);
     }

@@ -12,12 +12,8 @@ import java.util.Scanner;
  */
 public class InsertCommand extends ElementCommand {
 
-    public InsertCommand(String commandName, Scanner reader) {
-        this(commandName, reader, false);
-    }
-
-    public InsertCommand(String commandName, Scanner reader, boolean readingFromFile) {
-        super(commandName, reader, readingFromFile);
+    public InsertCommand(String commandName) {
+        super(commandName);
     }
 
     @Override
@@ -41,7 +37,7 @@ public class InsertCommand extends ElementCommand {
 
     @Override
     public void buildRequest(Request request) throws CommandException {
-        InsertCommand command = new InsertCommand(getCommandName(), reader);
+        InsertCommand command = new InsertCommand(getCommandName());
         command.key = key; command.readMovie = readMovie;
         request.addCommand(command);
     }

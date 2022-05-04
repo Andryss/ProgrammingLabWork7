@@ -1,6 +1,5 @@
 package general.commands;
 
-import client.*;
 import general.ClientINFO;
 import general.Request;
 import general.element.Coordinates;
@@ -19,41 +18,12 @@ import java.util.*;
  * Type of command, which can read elements
  */
 public abstract class ElementCommand extends NameableCommand {
-    /**
-     * Map with examples of commands (for example, "insert" - "insert 12")
-     * @see FieldSetter
-     */
     private static final Map<String, String> fieldExamples = new HashMap<>();
-    /**
-     * Map with methods we need to invoke to get fields of Movie
-     * @see FieldSetter
-     * @see Movie
-     * @see Coordinates
-     * @see Person
-     */
     private static final Map<String, Method> methodsSetters = new HashMap<>();
-    /**
-     * Map with the right order of fields we need to read
-     * @see FieldSetter
-     */
     private static final Map<Integer, String> order = new HashMap<>();
-    /**
-     * Do we need to ask a questions "Enter *something*:"?
-     */
-    private final transient boolean readingFromFile;
-
-    /**
-     * Scanner for reading elements from something
-     */
-    protected transient Scanner reader;
-    /**
-     * Given element key
-     */
     protected Integer key;
-    /**
-     * Read Movie element
-     */
     protected Movie readMovie;
+    private transient ClientINFO client;
 
     static {
         fillMethodsSetters(methodsSetters, Movie.class);
@@ -86,13 +56,9 @@ public abstract class ElementCommand extends NameableCommand {
 
     /**
      * Constructor with name, Hashtable, Scanner and boolean
-     * @param reader for reading elements from something
-     * @param readingFromFile flag for asking questions
      */
-    public ElementCommand(String commandName, Scanner reader, boolean readingFromFile) {
+    public ElementCommand(String commandName) {
         super(commandName);
-        this.reader = reader;
-        this.readingFromFile = readingFromFile;
     }
 
     /**
@@ -101,10 +67,8 @@ public abstract class ElementCommand extends NameableCommand {
      * @return string - user input or null
      */
     protected String readOneField(String fieldName) {
-        if (!readingFromFile) {
-            ClientController.print("Enter " + fieldName + " (" + fieldExamples.get(fieldName) + "): ");
-        }
-        String command = reader.nextLine().trim();
+        client.print("Enter " + fieldName + " (" + fieldExamples.get(fieldName) + "): ");
+        String command = client.nextLine().trim();
         return (command.equals("") ? null : command);
     }
 
@@ -120,9 +84,9 @@ public abstract class ElementCommand extends NameableCommand {
                 method.invoke(object, readOneField(fieldName));
                 break;
             } catch (InvocationTargetException e) {
-                ClientController.println("\u001B[31m" + e.getCause().getMessage() + "\u001B[0m");
+                client.println("\u001B[31m" + e.getCause().getMessage() + "\u001B[0m");
             } catch (IllegalAccessException e) {
-                ClientController.println("\u001B[31m" + e.getMessage() + "\u001B[0m");
+                client.println("\u001B[31m" + e.getMessage() + "\u001B[0m");
             }
         }
     }
@@ -132,9 +96,7 @@ public abstract class ElementCommand extends NameableCommand {
      * @return reader Movie element
      */
     protected Movie readMovie() {
-        if (!readingFromFile) {
-            ClientController.println("*reading Movie object starts*");
-        }
+        client.println("*reading Movie object starts*");
         Movie newMovie = new Movie();
         Coordinates newCoordinates = new Coordinates();
         Person newScreenwriter = new Person();
@@ -153,9 +115,7 @@ public abstract class ElementCommand extends NameableCommand {
         }
         newMovie.setCoordinates(newCoordinates);
         newMovie.setScreenwriter(newScreenwriter);
-        if (!readingFromFile) {
-            ClientController.println("*reading Movie object complete*");
-        }
+        client.println("*reading Movie object complete*");
         return newMovie;
     }
 
@@ -173,7 +133,8 @@ public abstract class ElementCommand extends NameableCommand {
             throw new BadArgumentsFormatException(getCommandName(), "value must be integer");
         }
 
-        sendRequestAndCheckElement(client);
+        this.client = client;
+        sendRequestAndCheckElement();
 
         try {
             this.readMovie = readMovie();
@@ -182,7 +143,7 @@ public abstract class ElementCommand extends NameableCommand {
         }
     }
 
-    private void sendRequestAndCheckElement(ClientINFO client) throws BadArgumentsException {
+    private void sendRequestAndCheckElement() throws BadArgumentsException {
         try {
             Response response = client.sendToServer(client.createNewRequest(
                     Request.RequestType.CHECK_ELEMENT,

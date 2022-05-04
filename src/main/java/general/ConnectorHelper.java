@@ -1,4 +1,4 @@
-package server;
+package general;
 
 import java.io.*;
 
@@ -19,7 +19,9 @@ public abstract class ConnectorHelper {
 
     public static <T> T objectFromBuffer(byte[] data) throws IOException, ClassNotFoundException {
         try (ObjectInputStream stream = new ObjectInputStream(new ByteArrayInputStream(data))) {
-            return  (T) stream.readObject();
+            @SuppressWarnings("unchecked")
+            T object = (T) stream.readObject();
+            return  object;
         }
     }
 }

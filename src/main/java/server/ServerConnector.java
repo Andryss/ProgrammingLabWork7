@@ -1,5 +1,6 @@
 package server;
 
+import general.ConnectorHelper;
 import general.Request;
 import general.Response;
 
@@ -41,7 +42,7 @@ public class ServerConnector {
             channel.close();
             selector.close();
         } catch (IOException e) {
-            ServerController.error(e.getMessage(), e);
+            ServerController.error(e.getMessage());
         }
     }
 
@@ -86,7 +87,7 @@ public class ServerConnector {
                 channel.send(dataBuffer, client);
                 dataBuffer.clear();
             } catch (IOException e) {
-                ServerController.error(e.getMessage(), e);
+                ServerController.error(e.getMessage());
             }
         }
 

@@ -18,6 +18,10 @@ public class ExecuteScriptCommand extends NameableCommand {
     private File file;
     private final FileExecutor caller;
 
+    public ExecuteScriptCommand(String commandName) {
+        this(commandName, null);
+    }
+
     public ExecuteScriptCommand(String commandName, FileExecutor caller) {
         super(commandName);
         this.caller = caller;

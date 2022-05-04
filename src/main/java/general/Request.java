@@ -6,6 +6,9 @@ import general.element.UserProfile;
 
 import java.util.Queue;
 
+/**
+ * Interface of client request to the server
+ */
 public interface Request {
 
     RequestType getRequestType();
@@ -20,6 +23,9 @@ public interface Request {
 
     void addCommand(Command command) throws CommandException;
 
+    /**
+     * Represent type of client request
+     */
     enum RequestType {
         CHECK_CONNECTION,
 

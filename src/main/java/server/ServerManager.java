@@ -36,7 +36,7 @@ public class ServerManager {
             try {
                 ServerConnector.run();
             } catch (IOException | ClassNotFoundException e) {
-                ServerController.error(e.getMessage(), e);
+                ServerController.error(e.getMessage());
             }
         }, "ReceivingThread").start();
         new Thread(ServerController::run, "SeConsoleThread").start();

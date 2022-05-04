@@ -4,7 +4,7 @@ import general.element.UserProfile;
 import general.Request;
 
 /**
- * Global class, which build one request from client (especially for not sending one Request through all methods)
+ * Global class, which build requests from client
  */
 public class RequestBuilder {
     private static UserProfile userProfile;

@@ -120,7 +120,7 @@ public class ServerExecutor {
         if (authorizedUsers.stream().noneMatch((u) -> u.equals(request.getUserProfile()))) {
             response = ResponseBuilder.createNewResponse(
                     Response.ResponseType.CHECKING_FAILED,
-                    "User isn't logged in yet"
+                    "User isn't logged in yet (or connection support time is out)"
             );
         } else {
             Movie movie = ServerCollectionManager.getMovie(request.getCheckingIndex());
@@ -171,7 +171,7 @@ public class ServerExecutor {
         if (authorizedUsers.stream().noneMatch((u) -> u.equals(request.getUserProfile()))) {
             response = ResponseBuilder.createNewResponse(
                     Response.ResponseType.EXECUTION_FAILED,
-                    "User isn't logged in yet"
+                    "User isn't logged in yet (or connection support time is out)"
             );
         } else {
             response = ResponseBuilder.createNewResponse(

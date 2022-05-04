@@ -1,7 +1,7 @@
 package client;
 
 import general.Request;
-import server.ConnectorHelper;
+import general.ConnectorHelper;
 import general.Response;
 
 import java.io.*;

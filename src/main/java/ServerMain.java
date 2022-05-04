@@ -10,9 +10,9 @@ public class ServerMain {
         try {
             ServerManager.run(port);
         } catch (FieldException e) {
-            ServerController.error("Problems with Movie File: " + e.getMessage(), e);
+            ServerController.error("Problems with Movie File: " + e.getMessage());
         } catch (Throwable e) {
-            ServerController.error(e.getMessage(), e);
+            ServerController.error(e.getMessage());
         }
     }
 }

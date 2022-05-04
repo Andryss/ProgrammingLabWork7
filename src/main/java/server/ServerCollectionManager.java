@@ -132,7 +132,7 @@ public class ServerCollectionManager {
         try {
             connection.close();
         } catch (SQLException e) {
-            ServerController.error(e.getMessage(), e);
+            ServerController.error(e.getMessage());
         }
     }
 
@@ -141,7 +141,7 @@ public class ServerCollectionManager {
             statement.execute(String.format("DROP TABLE %s", usersTable));
             statement.execute(String.format("DROP TABLE %s", movieTable));
         } catch (SQLException e) {
-            ServerController.error(e.getMessage(), e);
+            ServerController.error(e.getMessage());
         }
     }
 
@@ -180,7 +180,7 @@ public class ServerCollectionManager {
                     }
                 }
             } catch (SQLException e) {
-                ServerController.error(e.getMessage(), e);
+                ServerController.error(e.getMessage());
             } finally {
                 readWriteLock.unlock();
             }
@@ -198,7 +198,7 @@ public class ServerCollectionManager {
             removeUserStatement.executeUpdate();
             return userCollection.remove(userProfile.getName());
         } catch (SQLException e) {
-            ServerController.error(e.getMessage(), e);
+            ServerController.error(e.getMessage());
             return null;
         } finally {
             readWriteLock.unlock();
@@ -212,7 +212,7 @@ public class ServerCollectionManager {
             removeUserStatement.executeUpdate();
             userCollection.remove(userName);
         } catch (SQLException e) {
-            ServerController.error(e.getMessage(), e);
+            ServerController.error(e.getMessage());
         } finally {
             readWriteLock.unlock();
         }
@@ -254,7 +254,7 @@ public class ServerCollectionManager {
             movie.setOwner(userProfile.getName());
             return movieCollection.put(key, movie);
         } catch (SQLException e) {
-            ServerController.error(e.getMessage(), e);
+            ServerController.error(e.getMessage());
             return null;
         } finally {
             readWriteLock.unlock();
@@ -297,7 +297,7 @@ public class ServerCollectionManager {
             movie.setOwner(movieCollection.get(key).getOwner());
             return movieCollection.put(key, movie);
         } catch (SQLException e) {
-            ServerController.error(e.getMessage(), e);
+            ServerController.error(e.getMessage());
             return null;
         } finally {
             readWriteLock.unlock();
@@ -312,7 +312,7 @@ public class ServerCollectionManager {
             removeMovieStatement.executeUpdate();
             return movieCollection.remove(key);
         } catch (SQLException e) {
-            ServerController.error(e.getMessage(), e);
+            ServerController.error(e.getMessage());
             return null;
         } finally {
             readWriteLock.unlock();
@@ -326,7 +326,7 @@ public class ServerCollectionManager {
             removeMovieStatement.executeUpdate();
             movieCollection.remove(key);
         } catch (SQLException e) {
-            ServerController.error(e.getMessage(), e);
+            ServerController.error(e.getMessage());
         } finally {
             readWriteLock.unlock();
         }
@@ -341,12 +341,14 @@ public class ServerCollectionManager {
         try {
             removeAllMoviesStatement.setLong(1, id);
             removeAllMoviesStatement.executeUpdate();
-            ((Hashtable<Integer,Movie>) movieCollection.clone()).entrySet().stream()
+            @SuppressWarnings("unchecked")
+            Hashtable<Integer,Movie> hashtable = (Hashtable<Integer,Movie>) movieCollection.clone();
+            hashtable.entrySet().stream()
                     .filter(e -> e.getValue().getOwner().equals(userProfile.getName()))
                     .map(Map.Entry::getKey)
                     .forEach(movieCollection::remove);
         } catch (SQLException e) {
-            ServerController.error(e.getMessage(), e);
+            ServerController.error(e.getMessage());
         } finally {
             readWriteLock.unlock();
         }
@@ -357,7 +359,7 @@ public class ServerCollectionManager {
         try {
             statement.executeQuery(String.format("DELETE * FROM %s", movieTable));
         } catch (SQLException e) {
-            ServerController.error(e.getMessage(), e);
+            ServerController.error(e.getMessage());
         } finally {
             readWriteLock.unlock();
         }
@@ -420,7 +422,9 @@ public class ServerCollectionManager {
     }
 
     public static Hashtable<Integer,Movie> getMovieCollection() {
-        return (Hashtable<Integer, Movie>) movieCollection.clone();
+        @SuppressWarnings("unchecked")
+        Hashtable<Integer,Movie> hashtable = (Hashtable<Integer,Movie>) movieCollection.clone();
+        return hashtable;
     }
 
     static void printTables() {

@@ -21,7 +21,7 @@ public class ServerController {
         logger.info(message);
     }
 
-    public static void error(String message, Throwable error) {
+    public static void error(String message) {
         logger.error("\u001B[31m" + message + "\u001B[0m");
     }
 
@@ -72,7 +72,7 @@ public class ServerController {
                         try {
                             ServerCollectionManager.removeMovie(Integer.parseInt(args[1]));
                         } catch (NumberFormatException e) {
-                            error(e.getMessage(), e);
+                            error(e.getMessage());
                         }
                         break;
 
@@ -87,7 +87,7 @@ public class ServerController {
                             ServerCollectionManager.createTables();
                             ServerCollectionManager.loadCollectionsFromDB();
                         } catch (SQLException | FieldException e) {
-                            error(e.getMessage(), e);
+                            error(e.getMessage());
                         }
                         break;
 
@@ -95,9 +95,9 @@ public class ServerController {
                         info("Undefined console command \"" + args[0] + "\"");
                 }
             } catch (IndexOutOfBoundsException e) {
-                error("Incorrect amount of arguments: " + e.getMessage(), e);
+                error("Incorrect amount of arguments: " + e.getMessage());
             } catch (NullPointerException e) {
-                error("Found EOF", e);
+                error("Found EOF");
                 break;
             }
         }

@@ -26,15 +26,15 @@ public class ClientExecutor {
         commandMap.put("help", new HelpCommand("help"));
         commandMap.put("info", new InfoCommand("info"));
         commandMap.put("show", new ShowCommand("show"));
-        commandMap.put("insert", new InsertCommand("insert", ClientController.getReader()));
-        commandMap.put("update", new UpdateCommand("update", ClientController.getReader()));
+        commandMap.put("insert", new InsertCommand("insert"));
+        commandMap.put("update", new UpdateCommand("update"));
         commandMap.put("remove_key", new RemoveKeyCommand("remove_key"));
         commandMap.put("clear", new ClearCommand("clear"));
         //save --- FORBIDDEN!
-        commandMap.put("execute_script", new ExecuteScriptCommand("execute_script", null));
+        commandMap.put("execute_script", new ExecuteScriptCommand("execute_script"));
         commandMap.put("exit", new ExitCommand("exit"));
         commandMap.put("history", new HistoryCommand("history"));
-        commandMap.put("replace_if_greater", new ReplaceIfGreaterCommand("replace_if_greater", ClientController.getReader()));
+        commandMap.put("replace_if_greater", new ReplaceIfGreaterCommand("replace_if_greater"));
         commandMap.put("remove_lower_key", new RemoveLowerKeyCommand("remove_key_command"));
         commandMap.put("group_counting_by_length", new GroupCountingByLengthCommand("group_counting_by_length"));
         commandMap.put("count_less_than_length", new CountLessThenLengthCommand("count_less_than_length"));

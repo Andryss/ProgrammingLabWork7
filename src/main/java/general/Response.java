@@ -1,5 +1,8 @@
 package general;
 
+/**
+ * Interface of server response to the client
+ */
 public interface Response {
 
     Response addMessage(String line);
@@ -8,6 +11,9 @@ public interface Response {
 
     String getMessage();
 
+    /**
+     * Represent type of server response
+     */
     enum ResponseType {
         WRONG_REQUEST_FORMAT,
 

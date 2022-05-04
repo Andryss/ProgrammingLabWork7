@@ -69,8 +69,4 @@ public class ClientController {
         print("Enter user password: ");
         return readPrivateLine().trim();
     }
-
-    public static Scanner getReader() {
-        return reader;
-    }
 }

@@ -9,7 +9,6 @@ import general.ServerINFO;
 
 import java.util.HashMap;
 import java.util.NoSuchElementException;
-import java.util.Scanner;
 
 /**
  * <p>FileExecutor implements (2) step in FileManager:</p>
@@ -17,25 +16,28 @@ import java.util.Scanner;
  */
 public class FileExecutor {
     private HashMap<String, Command> commandMap = new HashMap<>();
-    private final ClientINFO clientINFO = new ClientINFOImpl();
+    private final FileController controller;
+    private final ClientINFO clientINFO;
     private final FileExecutor caller;
     private final Request request;
-    private final String fileName;
     private int commandNumber = 1;
 
     public FileExecutor(FileController fileController, FileExecutor caller, Request request) {
-        fillCommandMap(fileController.getReader());
+        fillCommandMap();
         this.caller = caller;
-        this.fileName = fileController.getFileName();
+        this.controller = fileController;
+        this.clientINFO = new ClientINFOImpl.ClientINFOFromFileImpl(this.controller);
         this.request = request;
     }
 
-    private void fillCommandMap(Scanner reader) {
-        commandMap = (HashMap<String, Command>) ClientExecutor.getCommandMap().clone();
-        commandMap.put("insert", new InsertCommand("insert", reader, true));
-        commandMap.put("update", new UpdateCommand("update", reader, true));
+    private void fillCommandMap() {
+        @SuppressWarnings("unchecked")
+        HashMap<String, Command> hashtable = (HashMap<String, Command>) ClientExecutor.getCommandMap().clone();
+        commandMap = hashtable;
+        commandMap.put("insert", new InsertCommand("insert"));
+        commandMap.put("update", new UpdateCommand("update"));
         commandMap.put("execute_script", new ExecuteScriptCommand("execute_script", this));
-        commandMap.put("replace_if_greater", new ReplaceIfGreaterCommand("replace_if_greater", reader, true));
+        commandMap.put("replace_if_greater", new ReplaceIfGreaterCommand("replace_if_greater"));
         commandMap.put("exit", new NameableCommand("exit") {
             @Override
             public void execute(ServerINFO server) throws CommandException {
@@ -87,7 +89,7 @@ public class FileExecutor {
     }
 
     public String getFileName() {
-        return fileName;
+        return controller.getFileName();
     }
 
     public int getCommandNumber() {
