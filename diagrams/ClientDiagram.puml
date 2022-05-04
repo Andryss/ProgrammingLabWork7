@@ -2,75 +2,89 @@
 
 package Client {
     class ClientConnector {
-    --Fields--
-    - static DatagramSocket socket
-    - static InetAddress serverAddress
-    - static int serverPort
-    - static final ByteBuffer dataBuffer = ByteBuffer.allocate(12000)
+    --Methods--
+    ~ static initialize(InetAddress serverAddress, int port) : void
+    - static setConnection(InetAddress serverAddress, int port) : void
+    - static checkConnection() : void
+    + static sendToServer(Request request) : Response
+    ~ static sendRequest(Request request) : void
+    - static sendPacket(byte[] buf) : void
+    - static acceptResponse() : Response
+    - static receivePacket(byte[] buf) : void
     }
 
     class ClientController {
-    --Fields--
-    - static final Scanner reader = new Scanner(System.in)
-    - static final PrintStream writer = System.out
+    --Methods--
+    ~ static initialize() : void
+    + static *readLine*
+    + static *print*
+    ~ static readServerAddress() : InetAddress
+    ~ static readLogin() : String
+    ~ static readPassword() : String
     }
 
     class ClientExecutor {
-    --Fields--
-    - static final HashMap<String, Command> commandMap = new HashMap<>()
-    - static final List<String> history = new LinkedList<>()
+    --Methods--
+    ~ static initialize() : void
+    - static fillCommandMap() : void
+    ~ static parseCommand(String inputLine) : void
+    - static executeCommand(String commandName, String[] args) : void
+    + static getCommandMap() : HashMap<String,Command>
+    + static getRequest() : Request
+    }
+
+    class ClientINFOImpl {
+    --Methods--
+    * (implemented from ClientINFO)
     }
 
     class ClientManager {
     --Methods--
     + static run(int port) : void
+    - static connectionStep(int port) : void
+    - static loginRegisterStep() : void
+    - static loginStep() : boolean
+    - static registerStep() : boolean
+    - static lrstep(RequestType requestType, ResponseType responseTypeSuccess, ResponseType responseTypeFail) : boolean
+    - static addLogoutHook() : void
+    - static executionStep() : void
     }
 
-    class Request {
-    --Fields--
-    - final RequestType requestType
-    - final UserProfile userProfile
-    - String commandName
-    - final Queue<Command> commandQueue = new LinkedList<>()
-    --InnerClasses--
-    + enum RequestType
+    class RequestImpl {
+    --Methods--
+    * (implemented from Request)
     }
-
-    enum RequestType {
-    CHECK_CONNECTION
-    LOGIN_USER
-    LOGOUT_USER
-    REGISTER_USER
-    EXECUTE_COMMAND
-    }
-
-    RequestType -up-+ Request
 
     class RequestBuilder {
-    --Fields--
-    - static UserProfile userProfile
-    - static Request request
+    --Methods--
+    + static createNewRequest(RequestType requestType) : Request
+    + static createNewRequest(RequestType requestType, Integer checkingIndex) : Request
+    + static createNewRequest(RequestType requestType, String commandName) : Request
+    + static setUserProfile(UserProfile userProfile) : void
+    + static getUserProfile() : UserProfile
     }
 
     package File {
         class FileController {
-        --Fields--
-        - final Scanner reader
-        - final File file
+        --Methods--
+        + readLine() : String
+        + hasNextLine() : boolean
+        + getFileName() : String
         }
 
         class FileExecutor {
-        --Fields--
-        - HashMap<String, Command> commandMap = new HashMap<>()
-        - final FileExecutor caller
-        - final String fileName
-        - int commandNumber = 1
+        --Methods--
+        - fillCommandMap() : void
+        ~ parseCommand(String inputLine) : void
+        - executeCommand(String commandName, String[] args) : void
+        + getCaller() : FileExecutor
+        + getFileName() : String
+        + getCommandNumber() : int
         }
 
         class FileManager {
-        --Fields--
-        - final FileController controller
-        - final FileExecutor executor
+        --Methods--
+        + buildRequest() : void
         }
     }
 }

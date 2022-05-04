@@ -26,10 +26,6 @@ public class FileController {
         return reader.hasNextLine();
     }
 
-    public Scanner getReader() {
-        return reader;
-    }
-
     public String getFileName() {
         return file.getName();
     }

@@ -39,13 +39,17 @@ public class ServerHistoryManager {
     }
 
     static void clearUserHistory(String username) {
-        ((Hashtable<UserProfile, LinkedList<String>>) userHistories.clone()).keySet().stream()
+        @SuppressWarnings("unchecked")
+        Hashtable<UserProfile, LinkedList<String>> hashtable = (Hashtable<UserProfile, LinkedList<String>>) userHistories.clone();
+        hashtable.keySet().stream()
                 .filter(u -> u.getName().equals(username))
                 .forEach(u -> userHistories.remove(u));
     }
 
     public static LinkedList<String> getUserHistory(UserProfile userProfile) {
-        return (LinkedList<String>) userHistories.get(userProfile).clone();
+        @SuppressWarnings("unchecked")
+        LinkedList<String> list = (LinkedList<String>) userHistories.get(userProfile).clone();
+        return list;
     }
 
     private static void saveUserHistories() {
@@ -86,7 +90,9 @@ public class ServerHistoryManager {
                 throw new IllegalAccessException("Can't load histories, because permission to read denied");
             } else {
                 ObjectInputStream stream = new ObjectInputStream(new FileInputStream(file));
-                userHistories = (Hashtable<UserProfile, LinkedList<String>>) stream.readObject();
+                @SuppressWarnings("unchecked")
+                Hashtable<UserProfile, LinkedList<String>> hashtable = (Hashtable<UserProfile, LinkedList<String>>) stream.readObject();
+                userHistories = hashtable;
                 stream.close();
             }
         } catch (IOException e) {
@@ -101,8 +107,10 @@ public class ServerHistoryManager {
             while (true) {
                 Thread.sleep(10_000);
                 long now = System.currentTimeMillis();
-                ((Hashtable<UserProfile,Long>) lastModifiedTime.clone()).forEach((u,t) -> {
-                    if (now - t > 20_000 * 1) {
+                @SuppressWarnings("unchecked")
+                Hashtable<UserProfile,Long> hashtable = (Hashtable<UserProfile,Long>) lastModifiedTime.clone();
+                hashtable.forEach((u,t) -> {
+                    if (now - t > 60_000 * 5) {
                         ServerExecutor.logoutUser(u.getName());
                         lastModifiedTime.remove(u);
                         ServerController.info("User " + u.getName() + " logout (reason: AFK)");

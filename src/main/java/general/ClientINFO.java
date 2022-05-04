@@ -1,5 +1,7 @@
 package general;
 
+import client.file.FileExecutor;
+
 import java.io.IOException;
 
 /**
@@ -10,6 +12,8 @@ public interface ClientINFO {
     Response sendToServer(Request request) throws IOException, ClassNotFoundException;
 
     Request createNewRequest(Request.RequestType requestType, Integer checkingIndex);
+
+    FileExecutor getCaller();
 
     void println(String line);
 

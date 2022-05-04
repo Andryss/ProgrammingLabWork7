@@ -11,15 +11,15 @@ public class RequestBuilder {
 
     private RequestBuilder() {}
 
-    public static Request createNewRequest(RequestImpl.RequestType requestType) {
+    public static Request createNewRequest(Request.RequestType requestType) {
         return new RequestImpl(requestType, userProfile);
     }
 
-    public static Request createNewRequest(RequestImpl.RequestType requestType, Integer checkingIndex) {
+    public static Request createNewRequest(Request.RequestType requestType, Integer checkingIndex) {
         return new RequestImpl(requestType, userProfile, checkingIndex);
     }
 
-    public static Request createNewRequest(RequestImpl.RequestType requestType, String commandName) {
+    public static Request createNewRequest(Request.RequestType requestType, String commandName) {
         return new RequestImpl(requestType, userProfile, commandName);
     }
 

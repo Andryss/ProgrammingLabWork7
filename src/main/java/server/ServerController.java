@@ -44,6 +44,7 @@ public class ServerController {
                                 "reg <name> <pass> - register new user\n" +
                                 "remove <key> - remove movie\n" +
                                 "clear - clear movie collection\n" +
+                                "history <name> - clear user history\n" +
                                 "dropcreate - drop and create tables");
                         break;
 
@@ -78,6 +79,10 @@ public class ServerController {
 
                     case "clear":
                         ServerCollectionManager.removeAllMovies();
+                        break;
+
+                    case "history":
+                        ServerHistoryManager.clearUserHistory(args[1]);
                         break;
 
                     case "dropcreate":

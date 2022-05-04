@@ -16,15 +16,10 @@ import java.io.FileNotFoundException;
  */
 public class ExecuteScriptCommand extends NameableCommand {
     private File file;
-    private final FileExecutor caller;
+    private FileExecutor caller;
 
     public ExecuteScriptCommand(String commandName) {
-        this(commandName, null);
-    }
-
-    public ExecuteScriptCommand(String commandName, FileExecutor caller) {
         super(commandName);
-        this.caller = caller;
     }
 
     @Override
@@ -41,6 +36,7 @@ public class ExecuteScriptCommand extends NameableCommand {
         if (!file.exists() || !file.isFile()) {
             throw new BadArgumentsException(getCommandName(), "script with name \"" + args[0] + "\" doesn't exists");
         }
+        caller = client.getCaller();
         for (FileExecutor curCaller = caller; curCaller != null; curCaller = curCaller.getCaller()) {
             if (curCaller.getFileName().equals(args[0])) {
                 throw new BadArgumentsException(getCommandName(), "recursion is not supported");

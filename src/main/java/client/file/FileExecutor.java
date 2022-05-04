@@ -26,7 +26,7 @@ public class FileExecutor {
         fillCommandMap();
         this.caller = caller;
         this.controller = fileController;
-        this.clientINFO = new ClientINFOImpl.ClientINFOFromFileImpl(this.controller);
+        this.clientINFO = new ClientINFOImpl.ClientINFOFromFileImpl(this.controller, caller);
         this.request = request;
     }
 
@@ -36,7 +36,7 @@ public class FileExecutor {
         commandMap = hashtable;
         commandMap.put("insert", new InsertCommand("insert"));
         commandMap.put("update", new UpdateCommand("update"));
-        commandMap.put("execute_script", new ExecuteScriptCommand("execute_script", this));
+        commandMap.put("execute_script", new ExecuteScriptCommand("execute_script"));
         commandMap.put("replace_if_greater", new ReplaceIfGreaterCommand("replace_if_greater"));
         commandMap.put("exit", new NameableCommand("exit") {
             @Override

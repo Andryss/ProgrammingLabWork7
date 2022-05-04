@@ -1,0 +1,264 @@
+@startuml
+
+package general {
+
+    package commands {
+        class CommandException {
+        --Methods--
+        + getCommand() : String
+        + getReason() : String
+        + getMessage() : String
+        }
+
+        class BadArgumentsException extends CommandException {
+        --Methods--
+        ~ static getExamples() : Map<String, String>
+        + getMessage() : String
+        }
+
+        class BadArgumentsCountException extends BadArgumentsException {
+        --Methods--
+        + getMessage() : String
+        }
+
+        class BadArgumentsFormatException extends BadArgumentsException {
+        --Methods--
+        + getMessage() : String
+        }
+
+        class UndefinedCommandException extends CommandException {
+        --Methods--
+        + getMessage() : String
+        }
+
+        interface Command {
+        --Methods--
+        execute(ServerINFO server) : boolean
+        setArgs(ClientINFO client, String... args) : void
+        default buildRequest(Request request) : void
+        }
+
+        abstract class NameableCommand implements Command {
+        --Methods--
+        + getCommandName() : String
+        }
+
+        abstract class ElementCommand extends NameableCommand {
+        --Methods--
+        # readOneField(String fieldName) : String
+        # setOneField(Object object, String fieldName, Method method) : void
+        # readMovie() : Movie
+        + setArgs(ClientINFO client, String... args) : void
+        - sendRequestAndCheckElement() : void
+        # abstract checkElement(Response response) : void
+        }
+
+        class ClearCommand extends NameableCommand {
+        }
+
+        class CountLessThenLengthCommand extends NameableCommand {
+        }
+
+        class ExecuteScriptCommand extends NameableCommand {
+        --Fields--
+        - File file
+        - FileExecutor caller
+        }
+
+        class ExitCommand extends NameableCommand {
+        }
+
+        class FilterByMpaaRatingCommand extends NameableCommand {
+        }
+
+        class GroupCountingByLengthCommand extends NameableCommand {
+        }
+
+        class HelpCommand extends NameableCommand {
+        }
+
+        class HistoryCommand extends NameableCommand {
+        }
+
+        class InfoCommand extends NameableCommand {
+        }
+
+        class InsertCommand extends ElementCommand {
+        }
+
+        class RemoveKeyCommand extends NameableCommand {
+        }
+
+        class RemoveLowerKeyCommand extends NameableCommand {
+        }
+
+        class ReplaceIfGreaterCommand extends ElementCommand {
+        }
+
+        class ShowCommand extends NameableCommand {
+        }
+
+        class UpdateCommand extends ElementCommand {
+        }
+    }
+
+    package element {
+        class Coordinates {
+        --Fields--
+        - float x
+        - Float y
+        }
+
+        class FieldException {
+        --Fields--
+        - final String value
+        - final String required
+        }
+
+        annotation FieldSetter {
+        fieldName() : String
+        example() : String
+        index() : int
+        }
+
+        class Movie {
+        --Fields--
+        - final long id
+        - String name
+        - Coordinates coordinates
+        - final ZonedDateTime creationDate
+        - long oscarsCount
+        - int length
+        - MovieGenre genre
+        - MpaaRating mpaaRating
+        - Person screenwriter
+        ~ static long global_id = 1
+        --InnerClasses--
+        + enum MpaaRating
+        + enum MovieGenre
+        }
+
+        enum MpaaRating {
+        G
+        PG
+        PG_13
+        R
+        NC_17
+        }
+
+        enum MovieGenre {
+        ACTION
+        WESTERN
+        DRAMA
+        COMEDY
+        HORROR
+        }
+
+        class Person {
+        --Fields--
+        - String name
+        - Date birthday
+        - Color hairColor
+        --InnerClasses--
+        + enum Color
+        }
+
+        enum Color {
+        RED
+        BLACK
+        BLUE
+        WHITE
+        BROWN
+        }
+
+        class UserProfile {
+        --Fields--
+        - final String name
+        - final String encryptedPassword
+        - transient long id
+        }
+
+        Color -up-+ Person
+        MpaaRating -up-+ Movie
+        MovieGenre -up-+ Movie
+    }
+
+    interface ClientINFO {
+    --Methods--
+    sendToServer(Request request) : Response
+    createNewRequest(Request.RequestType requestType, Integer checkingIndex) : Request
+    getCaller() : FileExecutor
+    println(String line) : void
+    print(String line) : void
+    nextLine() : String
+    }
+
+    abstract class ConnectorHelper {
+    --Methods--
+    + static <T> objectToBuffer(T obj) : byte[]
+    + static <T> objectFromBuffer(byte[] data) : T
+    }
+
+    interface Request {
+    --Methods--
+    getRequestType() : RequestType
+    getUserProfile() : UserProfile
+    getCheckingIndex() : Integer
+    getCommandName() : String
+    getCommandQueue() : Queue<Command>
+    addCommand(Command command) : void
+    --InnerClasses--
+    + enum RequestType
+    }
+
+    enum RequestType {
+    CHECK_CONNECTION
+    LOGIN_USER
+    LOGOUT_USER
+    REGISTER_USER
+    CHECK_ELEMENT
+    EXECUTE_COMMAND
+    }
+
+    interface Response {
+    --Methods--
+    addMessage(String line) : Response
+    getResponseType() : ResponseType
+    getMessage() : String
+    --InnerClasses--
+    + enum ResponseType
+    }
+
+    enum ResponseType {
+        WRONG_REQUEST_FORMAT
+        CONNECTION_SUCCESSFUL
+        LOGIN_SUCCESSFUL
+        LOGIN_FAILED
+        REGISTER_SUCCESSFUL
+        REGISTER_FAILED
+        ELEMENT_NOT_PRESENTED
+        PERMISSION_DENIED
+        CHECKING_SUCCESSFUL
+        CHECKING_FAILED
+        EXECUTION_SUCCESSFUL
+        EXECUTION_FAILED
+    }
+
+    interface ServerINFO {
+    --Methods--
+    getMovie(Integer key) : Movie
+    putMovie(Integer key, Movie readMovie) : Movie
+    updateMovie(Integer key, Movie movie) : Movie
+    removeMovie(Integer key) : Movie
+    removeAllMovies() : void
+    getMovieCollection() : Hashtable<Integer,Movie>
+    validationClone() : ServerINFO
+    getResponse() : Response
+    getUserHistory() : LinkedList<String>
+    }
+
+    RequestType -up-+ Request
+    ResponseType -up-+ Response
+}
+
+@enduml

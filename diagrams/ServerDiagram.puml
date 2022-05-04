@@ -1,108 +1,114 @@
 @startuml
 
 package Server {
-    abstract class ConnectorHelper {
-    --Methods--
-    + static <T> objectToBuffer(T obj) : byte[]
-    + static <T> objectFromBuffer(byte[] data) : T
-    }
-
-    class Response {
-    --Fields--
-    - ResponseType responseType
-    - StringBuilder message
-    --InnerClasses--
-    + enum ResponseType
-    }
-
-    enum ResponseType {
-    CONNECTION_SUCCESSFUL
-    LOGIN_SUCCESSFUL
-    LOGIN_FAILED
-    REGISTER_SUCCESSFUL
-    REGISTER_FAILED
-    EXECUTION_SUCCESSFUL
-    EXECUTION_FAILED
-    }
-
-    ResponseType -up-+ Response
 
     class ResponseBuilder {
-    --Fields--
-    - final Response response
+    --Methods--
+    ~ static createNewResponse(ResponseType responseType) : Response
+    ~ static createNewResponse(ResponseType responseType, String line) : Response
+    }
+
+    class ResponseImpl {
+    --Methods--
+    * (implemented from Response)
     }
 
     class ServerCollectionManager {
-    --Fields--
-    - static Connection connection
-    - static Hashtable<Integer, Movie> movieCollection
-    - static Hashtable<String, UserProfile> userCollection
-    - static final ReentrantLock readWriteLock = new ReentrantLock()
-    - static final String dbHostName = "pg"
-    - static final String dbName = "studs"
-    - static final String dbUser = "s335155"
-    - static final String dbPassword = "wpr492"
-    - static final String usersTable = "users_335155"
-    - static final String movieTable = "movie_335155"
-    - static Statement statement
-    - static PreparedStatement getUserStatement
-    - static PreparedStatement insertUserStatement
-    - static PreparedStatement removeUserStatement
-    - static PreparedStatement insertMovieStatement
-    - static PreparedStatement updateMovieStatement
-    - static PreparedStatement removeMovieStatement
+    --Methods--
+    ~ static initialize() : void
+    - static loadDBPrivates() : void
+    - static initializeStatements() ; void
+    ~ static createTables() : void
+    ~ static close() : void
+    ~ static dropTables() : void
+    + static getUserID(String userName) : long
+    + static getUserID(UserProfile user) : long
+    + static isUserPresented(UserProfile userProfile) : boolean
+    + static getUserName(long id) : String
+    + static registerUser(UserProfile userProfile) : long
+    + static removeUser(UserProfile userProfile) : UserProfile
+    ~ static removeUser(String userName)
+    + static getMovie(Integer key) : Movie
+    + static putMovie(Integer key, Movie movie, UserProfile userProfile) : Movie
+    - static checkPermission(Integer key, UserProfile userProfile) : void
+    + static updateMovie(Integer key, Movie movie, UserProfile userProfile)
+    + static removeMovie(Integer key, UserProfile userProfile) : Movie
+    ~ static removeMovie(Integer key) : void
+    + static removeAllMovies(UserProfile userProfile) : void
+    ~ static removeAllMovies() : void
+    ~ static loadCollectionsFromDB() : void
+    - static parseUser(ResultSet resultSet) : Map.Entry<String,UserProfile>
+    - static parseMovie(ResultSet resultSet) : Map.Entry<Integer,Movie>
+    + static getMovieCollection() : Hashtable<Integer,Movie>
+    ~ static printTables() : void
     }
 
     class ServerConnector {
-    --Fields--
-    - static DatagramChannel channel
-    - static Selector selector
-    - static final ByteBuffer dataBuffer = ByteBuffer.allocate(12000)
     --Methods--
+    ~ static initialize(int port) : void
+    - static bindChannel(int port) : void
+    ~ static close() : void
     + static run() : void
+    - static receiveRequest() : void
+    ~ static sendToClient(SocketAddress client, Response response) : void
     }
 
     class ServerController {
-    --Fields--
-    - static final Logger logger = LogManager.getLogger()
+    --Methods--
+    + static info(String message) : void
+    + static error(String message) : void
+    + static run() : void
     }
 
     class ServerExecutor {
-    --Fields--
-    - static ExecutorService executorService
-    - static final List<UserProfile> authorizedUsers = Collections.synchronizedList(new ArrayList<>())
-    - final SocketAddress client
-    - final Request request
-    - ServerINFO serverINFO
-    --InnerClasses--
-    + enum ExecuteState
+    --Methods--
+    ~ static initialize(int port) : void
+    ~ executeRequest() : void
+    - checkConnectionRequest() : void
+    - loginUserRequest() : void
+    - logoutUserRequest() : void
+    ~ static logoutUser(String userName) : void
+    - checkElementRequest() : void
+    - registerUserRequest() : void
+    - executeCommandRequest() : void
+    - validateCommands(Queue<Command> commandQueue) : void
+    ~ static printUsers() : void
+    + static getService() : ExecutorService
+    ~ static getAuthorizedUsers() : List<UserProfile>
     }
 
-    enum ExecuteState {
-    EXECUTE
-    VALIDATE
+    class ServerHistoryManager {
+    --Methods--
+    ~ static initialize(int port) : void
+    ~ static updateUser(UserProfile userProfile) : void
+    ~ static deleteUser(UserProfile userProfile) : void
+    ~ static addUserHistory(UserProfile userProfile, String command) : void
+    ~ static clearUserHistory(String username) : void
+    + static getUserHistory(UserProfile userProfile) : LinkedList<String>
+    - static saveUserHistories() : void
+    ~ static close() : void
+    - static loadUserHistories() : void
+    - static watchAndDeleteAFKUsers() : void
     }
 
-    class ServerINFO {
-    --Fields--
-    # final UserProfile userProfile
-    - final ResponseBuilder responseBuilder
-    --InnerClasses--
-    - static class ServerINFOClone
+    class ServerINFOImpl {
+    --Methods--
+    * (implemented from ServerINFO)
     }
 
     class ServerINFOClone {
     --Fields--
-    - final Hashtable<Integer, Movie> movieCollection = ServerCollectionManager.getMovieCollection()
+    - final Hashtable<Integer, Movie> movieCollection
     }
+
+    ServerINFOClone -up-+ ServerINFOImpl
 
     class ServerManager {
     --Methods--
     + static run(int port) : void
+    - static initializations(int port) : void
     }
 
-    ExecuteState -up-+ ServerExecutor
-    ServerINFOClone -up-+ ServerINFO
 }
 
 @enduml
