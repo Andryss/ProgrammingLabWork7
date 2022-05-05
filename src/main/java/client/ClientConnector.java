@@ -7,6 +7,7 @@ import general.Response;
 import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
+import java.util.Properties;
 
 /**
  * <p>ClientConnector implements (3) step in ClientManager</p>
@@ -16,20 +17,41 @@ public class ClientConnector {
     private static DatagramSocket socket;
     private static InetAddress serverAddress;
     private static int serverPort;
+    private static int socketSoTimeout;
     private static final ByteBuffer dataBuffer = ByteBuffer.allocate(30_000);
 
     private ClientConnector() {}
 
-    static void initialize(InetAddress serverAddress, int port) throws IOException, ClassNotFoundException {
-        setConnection(serverAddress, port);
+    static void initialize() throws IOException, ClassNotFoundException {
+        ClientController.println("Connecting to server \"" + serverAddress + "\"");
+        setConnection();
         checkConnection();
+        ClientController.printlnGood("Connection to server was successful");
     }
 
-    private static void setConnection(InetAddress serverAddress, int port) throws SocketException {
+    static void setProperties(Properties properties) throws UnknownHostException, NumberFormatException {
+        serverAddress = InetAddress.getByName(properties.getProperty("serverAddress", "localhost"));
+        try {
+            serverPort = Integer.parseInt(properties.getProperty("serverPort", "52927"));
+            if (serverPort < 0) {
+                throw new NumberFormatException("Property \"serverPort\" can't be negative");
+            }
+        } catch (NumberFormatException e) {
+            throw new NumberFormatException("Property \"serverPort\" must be integer");
+        }
+        try {
+            socketSoTimeout = Integer.parseInt(properties.getProperty("socketSoTimeout", "5000"));
+            if (socketSoTimeout < 0) {
+                throw new NumberFormatException("Property \"socketSoTimeout\" can't be negative");
+            }
+        } catch (NumberFormatException e) {
+            throw new NumberFormatException("Property \"socketSoTimeout\" must be integer");
+        }
+    }
+
+    private static void setConnection() throws SocketException {
         socket = new DatagramSocket();
-        socket.setSoTimeout(5_000);
-        ClientConnector.serverAddress = serverAddress;
-        serverPort = port;
+        socket.setSoTimeout(socketSoTimeout);
     }
 
     private static void checkConnection() throws IOException, ClassNotFoundException {

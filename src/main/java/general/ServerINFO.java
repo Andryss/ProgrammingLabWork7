@@ -6,7 +6,8 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 
 /**
- * Represents all methods which cat be used by commands while executing
+ * <p>Represents all methods which cat be used by commands while executing</p>
+ * <p>Follow "smth like Proxy" pattern</p>
  */
 public interface ServerINFO {
 

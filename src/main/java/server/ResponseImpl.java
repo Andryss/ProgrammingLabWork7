@@ -2,13 +2,12 @@ package server;
 
 import general.Response;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
- * Response class contains all information the server can send to client in one class
+ * @see Response
  */
-public class ResponseImpl implements Serializable, Response {
+public class ResponseImpl implements Response {
     private ResponseType responseType;
     private ArrayList<String> message;
     private static final Response emptyResponse = ResponseBuilder.createNewResponse()

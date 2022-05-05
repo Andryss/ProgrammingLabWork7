@@ -1,8 +1,6 @@
 package client;
 
 import java.io.PrintStream;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Scanner;
 
 /**
@@ -42,22 +40,6 @@ public class ClientController {
     }
     public static void printlnErr(String line) {
         writer.println("\u001B[31m" + line + "\u001B[0m");
-    }
-
-    static InetAddress readServerAddress() {
-        print("Enter server domain name or IP (or \"exit\"): ");
-        while (true) {
-            String line = readLine().trim();
-            if ("exit".equals(line)) {
-                System.exit(0);
-            }
-            try {
-                return InetAddress.getByName(line);
-            } catch (UnknownHostException e) {
-                printlnErr("Unknown host \"" + line + "\"");
-                print("Enter VALID server domain name or IP: ");
-            }
-        }
     }
 
     static String readLogin() {

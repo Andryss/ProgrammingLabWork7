@@ -7,7 +7,8 @@ import general.ServerINFO;
 import java.io.Serializable;
 
 /**
- * interface Command represents all required command methods
+ * <p>interface Command represents all required command methods</p>
+ * <p>Follow "Command" pattern</p>
  */
 public interface Command extends Serializable {
     /**

@@ -6,9 +6,9 @@ import general.Request;
 import general.Response;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.util.NoSuchElementException;
+import java.util.Properties;
 
 /**
  * <p>ClientManager consist of main client logic:</p>
@@ -25,10 +25,10 @@ import java.util.NoSuchElementException;
  */
 public class ClientManager {
 
-    public static void run(int port) throws IOException, ClassNotFoundException, CommandException {
+    public static void run(Properties properties) throws IOException, ClassNotFoundException, CommandException {
         try {
-            initializationStep();
-            connectionStep(port);
+            initializationStep(properties);
+            connectionStep();
             loginRegisterStep();
             executionStep();
         } catch (NoSuchElementException e) {
@@ -36,22 +36,13 @@ public class ClientManager {
         }
     }
 
-    private static void initializationStep() throws IOException, CommandException {
+    private static void initializationStep(Properties properties) throws IOException, CommandException, NumberFormatException {
+        ClientConnector.setProperties(properties);
         ClientExecutor.initialize();
     }
 
-    private static void connectionStep(int port) throws IOException, ClassNotFoundException {
-        while (true) {
-            try {
-                InetAddress serverAddress = ClientController.readServerAddress();
-                ClientController.println("Connecting to server \"" + serverAddress + "\"");
-                ClientConnector.initialize(serverAddress, port);
-                ClientController.printlnGood("Connection to server was successful");
-                break;
-            } catch (SocketTimeoutException e) {
-                ClientController.printlnErr(e.getMessage());
-            }
-        }
+    private static void connectionStep() throws IOException, ClassNotFoundException {
+        ClientConnector.initialize();
     }
 
     private static void loginRegisterStep() {
@@ -157,7 +148,7 @@ public class ClientManager {
                             "\"");
                 }
             } catch (SocketTimeoutException e) {
-                ClientController.printlnErr("Server isn't responding (try again later or choose another server)");
+                ClientController.printlnErr("Server isn't responding (try again later)");
             } catch (IOException | ClassNotFoundException | CommandException e) {
                 ClientController.printlnErr(e.getMessage());
             }

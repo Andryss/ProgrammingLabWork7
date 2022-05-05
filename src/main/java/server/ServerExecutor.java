@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
  * Also, ServerExecutor monitor authorized users
  */
 public class ServerExecutor {
-    private static ExecutorService executorService;
+    private static ExecutorService executorService;     // Follow "Object pool" pattern
     private static final List<UserProfile> authorizedUsers = new CopyOnWriteArrayList<>();
 
     private final SocketAddress client;

@@ -3,7 +3,8 @@ package server;
 import general.Response;
 
 /**
- * Global class, which build response to client
+ * <p>Global class, which build response to client</p>
+ * <p>Follow "Builder" pattern</p>
  */
 public class ResponseBuilder {
     private final ResponseImpl response = new ResponseImpl();

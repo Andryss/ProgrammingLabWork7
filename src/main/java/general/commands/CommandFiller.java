@@ -29,7 +29,7 @@ public abstract class CommandFiller {
             for (String className : classNames) {
                 try {
                     Class<?> cls = Class.forName(className);
-                    if (Arrays.stream(cls.getInterfaces()).noneMatch(c -> c == Command.class)) {
+                    if (!isImplementCommand(cls)) {
                         continue;
                     }
                     Constructor<?> constructor = cls.getDeclaredConstructor(String.class);
@@ -51,6 +51,18 @@ public abstract class CommandFiller {
         } catch (URISyntaxException e) {
             throw new IOException("Some syntax problems: " + e.getMessage());
         }
+    }
+
+    private static boolean isImplementCommand(Class<?> cls) {
+        for (Class<?> curCls = cls; curCls != Object.class; curCls = curCls.getSuperclass()) {
+            if (curCls == null) {
+                return false;
+            }
+            if (Arrays.stream(curCls.getInterfaces()).anyMatch(c -> c == Command.class)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

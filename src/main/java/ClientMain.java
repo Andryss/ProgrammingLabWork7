@@ -1,17 +1,36 @@
 import client.ClientController;
 import client.ClientManager;
-import general.commands.CommandException;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.util.Properties;
 
 public class ClientMain {
 
-    private static final int port = 52927;
-
     public static void main(String[] args) {
+        Properties properties = new Properties();
         try {
-            ClientManager.run(port);
-        } catch (IOException | ClassNotFoundException | CommandException e) {
+            File props = new File("client.properties");
+            if (!props.createNewFile()) {
+                if (!props.isFile() || !props.canRead()) {
+                    throw new IOException("Can't read anything from \"client.properties\" file");
+                }
+            }
+            properties.load(new FileReader(props));
+        } catch (FileNotFoundException e) {
+            ClientController.printlnErr("File \"client.properties\" with properties not found");
+            return;
+        } catch (IOException e) {
+            ClientController.printlnErr(e.getMessage());
+            return;
+        }
+
+
+        try {
+            ClientManager.run(properties);
+        } catch (Throwable e) {
             ClientController.printlnErr(e.getMessage());
         }
     }

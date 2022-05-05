@@ -10,7 +10,7 @@ import java.util.LinkedList;
 import java.util.Map;
 
 /**
- * Class ServerINFO contains of all the information, that can be useful for commands (collection, name of file etc.)
+ * @see ServerINFO
  */
 public class ServerINFOImpl implements ServerINFO {
     protected final UserProfile userProfile;

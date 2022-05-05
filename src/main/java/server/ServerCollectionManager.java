@@ -2,8 +2,6 @@ package server;
 
 import general.element.*;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.sql.*;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -20,38 +18,38 @@ public class ServerCollectionManager {
 
     private ServerCollectionManager() {}
 
-    private static final String dbHostName = "pg";
-    private static final String dbName = "studs";
+    private static String dbHostName;
+    private static String dbName;
     private static String dbUser;
     private static String dbPassword;
 
     private static final String usersTable = "users_335155";
     private static final String movieTable = "movie_335155";
 
-    static void initialize() throws ClassNotFoundException, SQLException, FieldException, FileNotFoundException {
+    static void initialize() throws ClassNotFoundException, SQLException, FieldException {
         Class.forName("org.postgresql.Driver");
-        loadDBPrivates();
-        connection = DriverManager.getConnection(String.format("jdbc:postgresql://%s/%s", dbHostName, dbName), dbUser, dbPassword);
+        try {
+            connection = DriverManager.getConnection(String.format("jdbc:postgresql://%s/%s", dbHostName, dbName), dbUser, dbPassword);
+        } catch (SQLException e) {
+            throw new SQLException("Can't create connection to db: " + e.getMessage());
+        }
         initializeStatements();
         createTables();
         loadCollectionsFromDB();
         printTables();
     }
 
-    private static void loadDBPrivates() throws FileNotFoundException {
-        try {
-            Scanner scanner = new Scanner(new File(".pgpass"));
-            String[] args = scanner.nextLine().split(":");
-            dbUser = args[3];
-            dbPassword = args[4];
-        } catch (FileNotFoundException e) {
-            throw new FileNotFoundException("File \".pgpass\" with login and password to connect to database not found (it must be <>:<>:<>:<username>:<password> format)");
-        } catch (NoSuchElementException e) {
-            throw new NoSuchElementException("File \".pgpass\" has no line (it must be <>:<>:<>:<username>:<password> format)");
-        } catch (IndexOutOfBoundsException e) {
-            throw new FileNotFoundException("File \".pgpass\" must have first string with <>:<>:<>:<username>:<password> format");
+    static void setProperties(Properties properties) {
+        dbHostName = properties.getProperty("dbHostName", "pg");
+        dbName = properties.getProperty("dbName", "studs");
+        dbUser = properties.getProperty("dbUser");
+        if (dbUser == null) {
+            throw new IllegalArgumentException("Property \"dbName\" doesn't set");
         }
-
+        dbPassword = properties.getProperty("dbPassword");
+        if (dbPassword == null) {
+            throw new IllegalArgumentException("Property \"dbPassword\" doesn't set");
+        }
     }
 
     private static Statement statement;

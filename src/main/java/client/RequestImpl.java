@@ -5,14 +5,13 @@ import general.commands.CommandException;
 import general.element.UserProfile;
 import general.Request;
 
-import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.Queue;
 
 /**
- * Request class contains all information client can send to the server in one class
+ * @see Request
  */
-public class RequestImpl implements Serializable, Request {
+public class RequestImpl implements Request {
     private RequestType requestType;
     private UserProfile userProfile;
     private Integer checkingIndex;

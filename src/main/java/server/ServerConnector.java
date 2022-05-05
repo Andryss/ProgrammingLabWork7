@@ -13,6 +13,7 @@ import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.Iterator;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -20,21 +21,33 @@ import java.util.Set;
  */
 public class ServerConnector {
     private static DatagramChannel channel;
+    private static int serverPort;
     private static Selector selector;
     private static final ByteBuffer dataBuffer = ByteBuffer.allocate(30_000);
 
     private ServerConnector() {}
 
-    static void initialize(int port) throws IOException {
-        bindChannel(port);
+    static void initialize() throws IOException {
+        bindChannel();
     }
 
-    private static void bindChannel(int port) throws IOException {
+    static void setProperties(Properties properties) {
+        try {
+            serverPort = Integer.parseInt(properties.getProperty("serverPort", "52927"));
+            if (serverPort < 0) {
+                throw new NumberFormatException("Property \"serverPort\" can't be negative");
+            }
+        } catch (NumberFormatException e) {
+            throw new NumberFormatException("Property \"serverPort\" must be integer");
+        }
+    }
+
+    private static void bindChannel() throws IOException {
         channel = DatagramChannel.open();
         channel.configureBlocking(false);
         selector = Selector.open();
         channel.register(selector, SelectionKey.OP_READ);
-        channel.bind(new InetSocketAddress(port));
+        channel.bind(new InetSocketAddress(serverPort));
     }
 
     static void close() {

@@ -4,12 +4,13 @@ import general.commands.Command;
 import general.commands.CommandException;
 import general.element.UserProfile;
 
+import java.io.Serializable;
 import java.util.Queue;
 
 /**
  * Interface of client request to the server
  */
-public interface Request {
+public interface Request extends Serializable {
 
     RequestType getRequestType();
 

@@ -1,9 +1,11 @@
 package general;
 
+import java.io.Serializable;
+
 /**
  * Interface of server response to the client
  */
-public interface Response {
+public interface Response extends Serializable {
 
     Response addMessage(String line);
 

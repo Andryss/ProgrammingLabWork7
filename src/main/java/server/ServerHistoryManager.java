@@ -7,15 +7,21 @@ import java.beans.XMLEncoder;
 import java.io.*;
 import java.util.Hashtable;
 import java.util.LinkedList;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Class, which working with user histories and banning users, which are not working for a long time
+ */
 public class ServerHistoryManager {
     private static Hashtable<UserProfile, Long> lastModifiedTime;
-    private static final String historyFilename = "UserHistories.xml";
+    private static String historyFilename;
     private static Hashtable<String, LinkedList<String>> userHistories;
-    private static final ScheduledExecutorService watchingThread = Executors.newSingleThreadScheduledExecutor();
+    private static int maxUserHistoryLength;
+    private static long userBanTime;
+    private static final ScheduledExecutorService watchingThread = Executors.newSingleThreadScheduledExecutor();    // Follow "Singleton" pattern
 
     private ServerHistoryManager() {}
 
@@ -23,6 +29,26 @@ public class ServerHistoryManager {
         loadUserHistories();
         lastModifiedTime = new Hashtable<>();
         watchingThread.scheduleAtFixedRate(ServerHistoryManager::watchAndDeleteAFKUsers, 10, 10, TimeUnit.SECONDS);
+    }
+
+    static void setProperties(Properties properties) {
+        historyFilename = properties.getProperty("userHistoriesFilename", "UserHistories.xml");
+        try {
+            maxUserHistoryLength = Integer.parseInt(properties.getProperty("maxUserHistoryLength", "15"));
+            if (maxUserHistoryLength < 13) {
+                throw new NumberFormatException("Property \"maxUserHistoryLength\" must be more at least 13");
+            }
+        } catch (NumberFormatException e) {
+            throw new NumberFormatException("Property \"maxUserHistoryLength\" must be integer");
+        }
+        try {
+            userBanTime = Long.parseLong(properties.getProperty("userBanTime", "300000"));
+            if (userBanTime < 60_000) {
+                throw new NumberFormatException("Property \"userBanTime\" must be more at least 60000");
+            }
+        } catch (NumberFormatException e) {
+            throw new NumberFormatException("Property \"userBanTime\" must be integer");
+        }
     }
 
     static void updateUser(UserProfile userProfile) {
@@ -39,7 +65,7 @@ public class ServerHistoryManager {
         }
         LinkedList<String> history = userHistories.get(userProfile.getName());
         history.add(command);
-        if (history.size() > 15) history.removeFirst();
+        if (history.size() > maxUserHistoryLength) history.removeFirst();
     }
 
     static void clearUserHistory(String username) {
@@ -116,7 +142,7 @@ public class ServerHistoryManager {
         @SuppressWarnings("unchecked")
         Hashtable<UserProfile,Long> hashtable = (Hashtable<UserProfile,Long>) lastModifiedTime.clone();
         hashtable.forEach((u,t) -> {
-            if (now - t > 60_000 * 5) {
+            if (now - t > userBanTime) {
                 ServerExecutor.logoutUser(u.getName());
                 lastModifiedTime.remove(u);
                 ServerController.info("User \"" + u.getName() + "\" logout (reason: AFK)");
