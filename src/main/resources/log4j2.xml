@@ -11,10 +11,10 @@
                      fileName="ServerWorkingLogs.log"
                      filePattern="$${date:yyyy-MM}/app-%d{MM-dd-yyyy}-%i.log.gz">
             <PatternLayout>
-                <Pattern>%d %p %c{1.} [%t] %m%n</Pattern>
+                <Pattern>%d %p [%t] %m%n</Pattern>
             </PatternLayout>
             <Policies>
-                <SizeBasedTriggeringPolicy size="200KB"/>
+                <SizeBasedTriggeringPolicy size="500KB"/>
             </Policies>
             <DefaultRolloverStrategy max="3"/>
         </RollingFile>

@@ -31,6 +31,16 @@ package general {
         + getMessage() : String
         }
 
+        abstract class CommandFiller {
+        + static fillCommandMap(HashMap<String,Command> commandMap) : void
+        - static isImplementCommand(Class<?> cls) : boolean
+        }
+
+        annotation ParseCommand {
+        name() : String
+        example : String
+        }
+
         interface Command {
         --Methods--
         execute(ServerINFO server) : boolean
@@ -45,6 +55,7 @@ package general {
 
         abstract class ElementCommand extends NameableCommand {
         --Methods--
+        - static fillMethodsSetters(Map<String, Method> emptyMethodsSetters, Class<?> cls) : void
         # readOneField(String fieldName) : String
         # setOneField(Object object, String fieldName, Method method) : void
         # readMovie() : Movie

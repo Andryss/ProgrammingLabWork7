@@ -38,38 +38,43 @@ public class ServerController {
                     case "help":
                         info("Available commands:\n" +
                                 "exit - shut down server\n" +
-                                "logout <name> - logout user\n" +
-                                "ban <name> - ban and logout user\n" +
-                                "show - print authorized users and collections\n" +
-                                "reg <name> <pass> - register new user\n" +
-                                "remove <key> - remove movie\n" +
-                                "clear - clear movie collection\n" +
-                                "history <name> - clear user history\n" +
-                                "dropcreate - drop and create tables");
+                                "usl[ogout] <name> - logout user\n" +
+                                "usb[an] <name> - ban and logout user\n" +
+                                "tbs[how] - print authorized users and collections\n" +
+                                "usr[eg] <name> <pass> - register new user\n" +
+                                "elr[emove] <key> - remove movie\n" +
+                                "elc[lear] - clear movie collection\n" +
+                                "usclh[istory] <name> - clear user history\n" +
+                                "tbdropcreate - drop and create tables");
                         break;
 
                     case "exit":
                         System.exit(0);
 
-                    case "logout":
+                    case "usl":
+                    case "uslogout":
                         ServerExecutor.logoutUser(args[1]);
                         break;
 
-                    case "ban":
+                    case "usb":
+                    case "usban":
                         ServerExecutor.logoutUser(args[1]);
                         ServerCollectionManager.removeUser(args[1]);
                         break;
 
-                    case "show":
+                    case "tbs":
+                    case "tbshow":
                         ServerExecutor.printUsers();
                         ServerCollectionManager.printTables();
                         break;
 
-                    case "reg":
+                    case "usr":
+                    case "usreg":
                         ServerCollectionManager.registerUser(new UserProfile(args[1], args[2]));
                         break;
 
-                    case "remove":
+                    case "elr":
+                    case "elremove":
                         try {
                             ServerCollectionManager.removeMovie(Integer.parseInt(args[1]));
                         } catch (NumberFormatException e) {
@@ -77,15 +82,17 @@ public class ServerController {
                         }
                         break;
 
-                    case "clear":
+                    case "elc":
+                    case "elclear":
                         ServerCollectionManager.removeAllMovies();
                         break;
 
-                    case "history":
+                    case "usclh":
+                    case "usclhistory":
                         ServerHistoryManager.clearUserHistory(args[1]);
                         break;
 
-                    case "dropcreate":
+                    case "tbdropcreate":
                         try {
                             ServerExecutor.getAuthorizedUsers().clear();
                             ServerCollectionManager.dropTables();

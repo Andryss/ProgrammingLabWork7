@@ -18,7 +18,7 @@ public class ClientConnector {
     private static InetAddress serverAddress;
     private static int serverPort;
     private static int socketSoTimeout;
-    private static final ByteBuffer dataBuffer = ByteBuffer.allocate(30_000);
+    private static final ByteBuffer dataBuffer = ByteBuffer.allocate(15_000);
 
     private ClientConnector() {}
 
@@ -33,19 +33,19 @@ public class ClientConnector {
         serverAddress = InetAddress.getByName(properties.getProperty("serverAddress", "localhost"));
         try {
             serverPort = Integer.parseInt(properties.getProperty("serverPort", "52927"));
-            if (serverPort < 0) {
-                throw new NumberFormatException("Property \"serverPort\" can't be negative");
+            if (serverPort < 0 || serverPort > 65535) {
+                throw new NumberFormatException("property \"serverPort\" must be in range 1-65536");
             }
         } catch (NumberFormatException e) {
-            throw new NumberFormatException("Property \"serverPort\" must be integer");
+            throw new NumberFormatException("Can't parse property \"serverPort\": " + e.getMessage());
         }
         try {
             socketSoTimeout = Integer.parseInt(properties.getProperty("socketSoTimeout", "5000"));
-            if (socketSoTimeout < 0) {
-                throw new NumberFormatException("Property \"socketSoTimeout\" can't be negative");
+            if (socketSoTimeout < 1 || socketSoTimeout > 60_000) {
+                throw new NumberFormatException("property \"socketSoTimeout\" must be in range 1-60000");
             }
         } catch (NumberFormatException e) {
-            throw new NumberFormatException("Property \"socketSoTimeout\" must be integer");
+            throw new NumberFormatException("Can't parse property \"socketSoTimeout\": " + e.getMessage());
         }
     }
 

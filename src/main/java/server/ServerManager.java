@@ -14,13 +14,6 @@ public class ServerManager {
 
     private ServerManager() {}
 
-    static {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            closeAllModules();
-            ServerController.info("All services closed");
-        }, "SeClosingThread"));
-    }
-
     public static void run(Properties properties) throws IOException, FieldException, SQLException, ClassNotFoundException, IllegalAccessException {
         ServerController.info("Initializations start");
         initializations(properties);
@@ -30,7 +23,7 @@ public class ServerManager {
         new Thread(() -> {
             try {
                 ServerConnector.run();
-            } catch (IOException | ClassNotFoundException e) {
+            } catch (IOException e) {
                 ServerController.error(e.getMessage());
             }
         }, "ReceivingThread").start();
@@ -40,6 +33,11 @@ public class ServerManager {
     private static void initializations(Properties properties) throws IOException, FieldException, SQLException, ClassNotFoundException, IllegalAccessException {
         setAllModulesProperties(properties);
         initializeAllModules();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            closeAllModules();
+            ServerController.info("All services closed");
+        }, "SeClosingThread"));
     }
 
     private static void setAllModulesProperties(Properties properties) {

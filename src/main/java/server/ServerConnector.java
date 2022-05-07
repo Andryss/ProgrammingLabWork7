@@ -23,9 +23,9 @@ public class ServerConnector {
     private static DatagramChannel channel;
     private static int serverPort;
     private static Selector selector;
-    private static final ByteBuffer dataBuffer = ByteBuffer.allocate(30_000);
+    private final ByteBuffer dataBuffer = ByteBuffer.allocate(15_000);
 
-    private ServerConnector() {}
+    ServerConnector() {}
 
     static void initialize() throws IOException {
         bindChannel();
@@ -34,11 +34,11 @@ public class ServerConnector {
     static void setProperties(Properties properties) {
         try {
             serverPort = Integer.parseInt(properties.getProperty("serverPort", "52927"));
-            if (serverPort < 0) {
-                throw new NumberFormatException("Property \"serverPort\" can't be negative");
+            if (serverPort < 0 || serverPort > 65535) {
+                throw new NumberFormatException("property \"serverPort\" must be in range 1-65536");
             }
         } catch (NumberFormatException e) {
-            throw new NumberFormatException("Property \"serverPort\" must be integer");
+            throw new NumberFormatException("Can't parse property \"serverPort\": " + e.getMessage());
         }
     }
 
@@ -59,7 +59,7 @@ public class ServerConnector {
         }
     }
 
-    public static void run() throws IOException, ClassNotFoundException {
+    public static void run() throws IOException {
         ServerController.info("------------------------------- Ready for receiving -------------------------------");
             while (true) {
                 try {
@@ -68,7 +68,9 @@ public class ServerConnector {
                     for (Iterator<SelectionKey> keyIterator = keys.iterator(); keyIterator.hasNext(); keyIterator.remove()) {
                         SelectionKey key = keyIterator.next();
                         if (key.isValid() && key.isReadable()) {
-                            receiveRequest();
+                            ServerConnector connector = new ServerConnector();
+                            SocketAddress client = channel.receive(connector.dataBuffer);
+                            new Thread(() -> connector.receiveRequest(client), "ReceiveThreadJr").start();
                             ServerController.info("------------------------------- Ready for receiving -------------------------------");
                         }
                     }
@@ -78,30 +80,28 @@ public class ServerConnector {
             }
     }
 
-    private static void receiveRequest() throws IOException, ClassNotFoundException {
-        synchronized (dataBuffer) {
-            SocketAddress client = channel.receive(dataBuffer);
+    private void receiveRequest(SocketAddress client) {
+        try {
             Request request = ConnectorHelper.objectFromBuffer(dataBuffer.array());
 
             ServerController.info("Received " + dataBuffer.position() + " bytes buffer with request " + request);
             dataBuffer.clear();
 
             ServerExecutor.getService().submit(() -> new ServerExecutor(client, request).executeRequest());
+        } catch (IOException | ClassNotFoundException e) {
+            ServerController.error(e.getMessage());
         }
     }
 
-    static void sendToClient(SocketAddress client, Response response) {
-
-        synchronized (dataBuffer) {
-            try {
-                dataBuffer.put(ConnectorHelper.objectToBuffer(response));
-                dataBuffer.flip();
-                ServerController.info("Sending " + dataBuffer.limit() + " bytes to client " + client.toString() + " starts");
-                channel.send(dataBuffer, client);
-                dataBuffer.clear();
-            } catch (IOException e) {
-                ServerController.error(e.getMessage());
-            }
+    void sendToClient(SocketAddress client, Response response) {
+        try {
+            dataBuffer.put(ConnectorHelper.objectToBuffer(response));
+            dataBuffer.flip();
+            ServerController.info("Sending " + dataBuffer.limit() + " bytes to client " + client.toString() + " starts");
+            channel.send(dataBuffer, client);
+            dataBuffer.clear();
+        } catch (Throwable e) {
+            ServerController.error(e.getMessage());
         }
 
         ServerController.info("Sending to client completed");

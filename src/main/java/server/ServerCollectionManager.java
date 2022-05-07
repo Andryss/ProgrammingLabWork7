@@ -13,6 +13,8 @@ import java.util.concurrent.locks.ReentrantLock;
 public class ServerCollectionManager {
     private static Connection connection;
     private static Hashtable<Integer, Movie> movieCollection;
+    private static int collectionElementsLimit;
+    private static int userElementsLimit;
     private static Hashtable<String, UserProfile> userCollection;
     private static final ReentrantLock readWriteLock = new ReentrantLock();
 
@@ -49,6 +51,22 @@ public class ServerCollectionManager {
         dbPassword = properties.getProperty("dbPassword");
         if (dbPassword == null) {
             throw new IllegalArgumentException("Property \"dbPassword\" doesn't set");
+        }
+        try {
+            collectionElementsLimit = Integer.parseInt(properties.getProperty("collectionElementsLimit", "10"));
+            if (collectionElementsLimit < 0) {
+                throw new NumberFormatException("property \"collectionElementsLimit\" must be positive");
+            }
+        } catch (NumberFormatException e) {
+            throw new NumberFormatException("Can't parse property \"collectionElementsLimit\": " + e.getMessage());
+        }
+        try {
+            userElementsLimit = Integer.parseInt(properties.getProperty("userElementsLimit", "3"));
+            if (userElementsLimit < 0) {
+                throw new NumberFormatException("property \"userElementsLimit\" must be positive");
+            }
+        } catch (NumberFormatException e) {
+            throw new NumberFormatException("Can't parse property \"userElementsLimit\": " + e.getMessage());
         }
     }
 
@@ -221,21 +239,24 @@ public class ServerCollectionManager {
         return movieCollection.get(key);
     }
 
+    static long countElements(String userName) {
+        return getMovieCollection()
+                .values().stream()
+                .filter(m -> m.getOwner().equals(userName))
+                .count();
+    }
+
     public static Movie putMovie(Integer key, Movie movie, UserProfile userProfile) throws IllegalAccessException {
         long userID = getUserID(userProfile);
         if (userID == -1) {
             throw new IllegalAccessException("User with name \"" + userProfile.getName() + "\" doesn't exist");
         } else if (movieCollection.get(key) != null) {
             throw new IllegalAccessException("Movie with key \"" + key + "\" already exists");
-        } else if (movieCollection.size() >= 10) {
-            throw new IllegalAccessException("Collection limit (10) exceeded");
+        } else if (movieCollection.size() >= collectionElementsLimit) {
+            throw new IllegalAccessException("Collection limit (" + collectionElementsLimit + ") exceeded");
         } else {
-            @SuppressWarnings("unchecked")
-            Hashtable<Integer,Movie> hashtable = (Hashtable<Integer, Movie>) movieCollection.clone();
-            if (hashtable.values().stream()
-                    .filter(m -> m.getOwner().equals(userProfile.getName()))
-                    .count() >= 3) {
-                throw new IllegalAccessException(userProfile.getName() + "'s elements count limit (3) exceeded");
+            if (countElements(userProfile.getName()) >= userElementsLimit) {
+                throw new IllegalAccessException(userProfile.getName() + "'s elements count limit (" + userElementsLimit + ") exceeded");
             }
         }
         readWriteLock.lock();
@@ -431,6 +452,13 @@ public class ServerCollectionManager {
         @SuppressWarnings("unchecked")
         Hashtable<Integer,Movie> hashtable = (Hashtable<Integer,Movie>) movieCollection.clone();
         return hashtable;
+    }
+
+    public static int getCollectionElementsLimit() {
+        return collectionElementsLimit;
+    }
+    public static int getUserElementsLimit() {
+        return userElementsLimit;
     }
 
     static void printTables() {

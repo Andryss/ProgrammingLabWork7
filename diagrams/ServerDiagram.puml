@@ -4,8 +4,10 @@ package Server {
 
     class ResponseBuilder {
     --Methods--
-    ~ static createNewResponse(ResponseType responseType) : Response
-    ~ static createNewResponse(ResponseType responseType, String line) : Response
+    ~ static createNewResponse() : ResponseBuilder
+    + static setResponseType(ResponseType responseType) : ResponseBuilder
+    + addMessage(String line) : ResponseBuilder
+    + build() : Response
     }
 
     class ResponseImpl {
@@ -16,8 +18,8 @@ package Server {
     class ServerCollectionManager {
     --Methods--
     ~ static initialize() : void
-    - static loadDBPrivates() : void
-    - static initializeStatements() ; void
+    ~ static setProperties(Properties properties) : void
+    - static initializeStatements() : void
     ~ static createTables() : void
     ~ static close() : void
     ~ static dropTables() : void
@@ -27,11 +29,11 @@ package Server {
     + static getUserName(long id) : String
     + static registerUser(UserProfile userProfile) : long
     + static removeUser(UserProfile userProfile) : UserProfile
-    ~ static removeUser(String userName)
+    ~ static removeUser(String userName) : void
     + static getMovie(Integer key) : Movie
     + static putMovie(Integer key, Movie movie, UserProfile userProfile) : Movie
     - static checkPermission(Integer key, UserProfile userProfile) : void
-    + static updateMovie(Integer key, Movie movie, UserProfile userProfile)
+    + static updateMovie(Integer key, Movie movie, UserProfile userProfile) : Movie
     + static removeMovie(Integer key, UserProfile userProfile) : Movie
     ~ static removeMovie(Integer key) : void
     + static removeAllMovies(UserProfile userProfile) : void
@@ -46,7 +48,8 @@ package Server {
     class ServerConnector {
     --Methods--
     ~ static initialize(int port) : void
-    - static bindChannel(int port) : void
+    ~ static setProperties(Properties properties) : void
+    - static bindChannel() : void
     ~ static close() : void
     + static run() : void
     - static receiveRequest() : void
@@ -62,7 +65,8 @@ package Server {
 
     class ServerExecutor {
     --Methods--
-    ~ static initialize(int port) : void
+    ~ static initialize() : void
+    ~ static close() : void
     ~ executeRequest() : void
     - checkConnectionRequest() : void
     - loginUserRequest() : void
@@ -71,7 +75,7 @@ package Server {
     - checkElementRequest() : void
     - registerUserRequest() : void
     - executeCommandRequest() : void
-    - validateCommands(Queue<Command> commandQueue) : void
+    - validateCommands() : void
     ~ static printUsers() : void
     + static getService() : ExecutorService
     ~ static getAuthorizedUsers() : List<UserProfile>
@@ -79,7 +83,8 @@ package Server {
 
     class ServerHistoryManager {
     --Methods--
-    ~ static initialize(int port) : void
+    ~ static initialize() : void
+    ~ static setProperties(Properties properties) : void
     ~ static updateUser(UserProfile userProfile) : void
     ~ static deleteUser(UserProfile userProfile) : void
     ~ static addUserHistory(UserProfile userProfile, String command) : void
@@ -94,6 +99,8 @@ package Server {
     class ServerINFOImpl {
     --Methods--
     * (implemented from ServerINFO)
+    --InnerClasses--
+    - static class ServerINFOClone
     }
 
     class ServerINFOClone {
@@ -106,7 +113,10 @@ package Server {
     class ServerManager {
     --Methods--
     + static run(int port) : void
-    - static initializations(int port) : void
+    - static initializations(Properties properties) : void
+    - static setAllModulesProperties(Properties properties) : void
+    - static initializeAllModules() : void
+    - static closeAllModules() : void
     }
 
 }

@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * ServerExecutor executing Request depending on RequestType and starting Thread which sending server Response
@@ -68,7 +69,7 @@ public class ServerExecutor {
                     .setResponseType(Response.ResponseType.WRONG_REQUEST_FORMAT)
                     .addMessage("Wrong request format")
                     .build();
-            new Thread(() -> ServerConnector.sendToClient(client, response), "SendingWFThread").start();
+            new Thread(() -> new ServerConnector().sendToClient(client, response), "SendingWFThread").start();
         }
 
         ServerController.info("Request executed");
@@ -78,11 +79,16 @@ public class ServerExecutor {
     }
 
     private void checkConnectionRequest() {
-        Response response = ResponseBuilder.createNewResponse()
-                .setResponseType(Response.ResponseType.CONNECTION_SUCCESSFUL)
-                .addMessage("Connection with server was successful")
-                .build();
-        new Thread(() -> ServerConnector.sendToClient(client, response), "SendingCCThread").start();
+        try {
+            TimeUnit.SECONDS.sleep(2); // Emulate work
+            Response response = ResponseBuilder.createNewResponse()
+                    .setResponseType(Response.ResponseType.CONNECTION_SUCCESSFUL)
+                    .addMessage("Connection with server was successful")
+                    .build();
+            new Thread(() -> new ServerConnector().sendToClient(client, response), "SendingCCThread").start();
+        } catch (InterruptedException e) {
+            // ignore
+        }
     }
 
     private void loginUserRequest() {
@@ -107,7 +113,7 @@ public class ServerExecutor {
                     .addMessage("Incorrect login or password")
                     .build();
         }
-        new Thread(() -> ServerConnector.sendToClient(client, response), "SendingLUThread").start();
+        new Thread(() -> new ServerConnector().sendToClient(client, response), "SendingLUThread").start();
     }
 
     private void logoutUserRequest() {
@@ -133,10 +139,17 @@ public class ServerExecutor {
         } else {
             Movie movie = ServerCollectionManager.getMovie(request.getCheckingIndex());
             if (movie == null) {
-                response = ResponseBuilder.createNewResponse()
-                        .setResponseType(Response.ResponseType.ELEMENT_NOT_PRESENTED)
-                        .addMessage("Movie with key \"" + request.getCheckingIndex() + "\" doesn't exist")
-                        .build();
+                if (ServerCollectionManager.countElements(request.getUserProfile().getName()) >= ServerCollectionManager.getUserElementsLimit()) {
+                    response = ResponseBuilder.createNewResponse()
+                            .setResponseType(Response.ResponseType.USER_LIMIT_EXCEEDED)
+                            .addMessage("Your elements count limit (" + ServerCollectionManager.getUserElementsLimit() + ") exceeded")
+                            .build();
+                } else {
+                    response = ResponseBuilder.createNewResponse()
+                            .setResponseType(Response.ResponseType.ELEMENT_NOT_PRESENTED)
+                            .addMessage("Movie with key \"" + request.getCheckingIndex() + "\" doesn't exist")
+                            .build();
+                }
             } else {
                 if (!movie.getOwner().equals(request.getUserProfile().getName())) {
                     response = ResponseBuilder.createNewResponse()
@@ -152,7 +165,7 @@ public class ServerExecutor {
             }
             ServerHistoryManager.updateUser(request.getUserProfile());
         }
-        new Thread(() -> ServerConnector.sendToClient(client, response), "SendingCEThread").start();
+        new Thread(() -> new ServerConnector().sendToClient(client, response), "SendingCEThread").start();
     }
 
     private void registerUserRequest() {
@@ -171,7 +184,7 @@ public class ServerExecutor {
                     .build();
             ServerHistoryManager.updateUser(request.getUserProfile());
         }
-        new Thread(() -> ServerConnector.sendToClient(client, response), "SendingRUThread").start();
+        new Thread(() -> new ServerConnector().sendToClient(client, response), "SendingRUThread").start();
     }
 
     private void executeCommandRequest() {
@@ -192,7 +205,7 @@ public class ServerExecutor {
             try {
                 response.addMessage("\u001B[34m" + "START: command \"" + request.getCommandName() + "\" start executing" + "\u001B[0m");
                 if (commandQueue.size() > 1) {
-                    validateCommands(commandQueue);
+                    validateCommands();
                 }
                 for (Command command : commandQueue) {
                     command.execute(serverINFO);
@@ -207,13 +220,13 @@ public class ServerExecutor {
             }
         }
         Response finalResponse = response;
-        new Thread(() -> ServerConnector.sendToClient(client, finalResponse), "SendingECThread").start();
+        new Thread(() -> new ServerConnector().sendToClient(client, finalResponse), "SendingECThread").start();
     }
 
-    private void validateCommands(Queue<Command> commandQueue) throws CommandException {
+    private void validateCommands() throws CommandException {
         ServerINFO copiedServerINFO = serverINFO.validationClone();
 
-        for (Command command : commandQueue) {
+        for (Command command : request.getCommandQueue()) {
             try {
                 command.execute(copiedServerINFO);
             } catch (CommandException e) {

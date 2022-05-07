@@ -36,18 +36,18 @@ public class ServerHistoryManager {
         try {
             maxUserHistoryLength = Integer.parseInt(properties.getProperty("maxUserHistoryLength", "15"));
             if (maxUserHistoryLength < 13) {
-                throw new NumberFormatException("Property \"maxUserHistoryLength\" must be more at least 13");
+                throw new NumberFormatException("property \"maxUserHistoryLength\" must be more at least 13");
             }
         } catch (NumberFormatException e) {
-            throw new NumberFormatException("Property \"maxUserHistoryLength\" must be integer");
+            throw new NumberFormatException("Can't parse property \"maxUserHistoryLength\": " + e.getMessage());
         }
         try {
             userBanTime = Long.parseLong(properties.getProperty("userBanTime", "300000"));
             if (userBanTime < 60_000) {
-                throw new NumberFormatException("Property \"userBanTime\" must be more at least 60000");
+                throw new NumberFormatException("property \"userBanTime\" must be more at least 60000");
             }
         } catch (NumberFormatException e) {
-            throw new NumberFormatException("Property \"userBanTime\" must be integer");
+            throw new NumberFormatException("Can't parse property \"userBanTime\": " + e.getMessage());
         }
     }
 
@@ -73,7 +73,7 @@ public class ServerHistoryManager {
         Hashtable<String, LinkedList<String>> hashtable = (Hashtable<String, LinkedList<String>>) userHistories.clone();
         hashtable.keySet().stream()
                 .filter(u -> u.equals(username))
-                .forEach(u -> userHistories.remove(u));
+                .forEach(u -> userHistories.put(u, new LinkedList<>()));
     }
 
     public static LinkedList<String> getUserHistory(UserProfile userProfile) {
@@ -121,18 +121,23 @@ public class ServerHistoryManager {
                 if (!file.canRead()) {
                     throw new IllegalAccessException("Can't load histories, because permission to read denied");
                 } else {
-                    try (XMLDecoder decoder = new XMLDecoder(new FileInputStream(file))) {
+                    try (XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(file)))) {
+                        decoder.setExceptionListener(e -> {
+                            throw new IllegalArgumentException("wrong format of \"" + historyFilename + "\" (" + e.getMessage() + ")");
+                        });
                         @SuppressWarnings("unchecked")
                         Hashtable<String, LinkedList<String>> hashtable = (Hashtable<String, LinkedList<String>>) decoder.readObject();
-                        userHistories = hashtable;
+                        userHistories = (hashtable == null) ? new Hashtable<>() : hashtable;
                     } catch (ArrayIndexOutOfBoundsException e) {
                         userHistories = new Hashtable<>();
+                    } catch (ClassCastException e) {
+                        throw new IllegalArgumentException("wrong user history object format");
                     }
                 }
             } else {
                 userHistories = new Hashtable<>();
             }
-        } catch (IOException e) {
+        } catch (IOException | IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
             throw new IOException("Can't load user histories: " + e.getMessage());
         }
     }

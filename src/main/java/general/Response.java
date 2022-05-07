@@ -28,6 +28,7 @@ public interface Response extends Serializable {
         REGISTER_FAILED,
 
         ELEMENT_NOT_PRESENTED,
+        USER_LIMIT_EXCEEDED,
         PERMISSION_DENIED,
         CHECKING_SUCCESSFUL,
         CHECKING_FAILED,

@@ -3,8 +3,9 @@
 package Client {
     class ClientConnector {
     --Methods--
-    ~ static initialize(InetAddress serverAddress, int port) : void
-    - static setConnection(InetAddress serverAddress, int port) : void
+    ~ static initialize() : void
+    ~ static setProperties(Properties properties) : void
+    - static setConnection() : void
     - static checkConnection() : void
     + static sendToServer(Request request) : Response
     ~ static sendRequest(Request request) : void
@@ -18,7 +19,6 @@ package Client {
     ~ static initialize() : void
     + static *readLine*
     + static *print*
-    ~ static readServerAddress() : InetAddress
     ~ static readLogin() : String
     ~ static readPassword() : String
     }
@@ -36,11 +36,23 @@ package Client {
     class ClientINFOImpl {
     --Methods--
     * (implemented from ClientINFO)
+    --InnerClasses--
+    + static class ClientINFOFromFileImpl
     }
+
+    class ClientINFOFromFileImpl {
+    --Methods--
+    + println(String line) : void
+    + print(String line) : void
+    + nextLine() : void
+    }
+
+    ClientINFOFromFileImpl -up-+ ClientINFOImpl
 
     class ClientManager {
     --Methods--
-    + static run(int port) : void
+    + static run(Properties properties) : void
+    - static initializationStep(Properties properties) : void
     - static connectionStep(int port) : void
     - static loginRegisterStep() : void
     - static loginStep() : boolean
@@ -50,18 +62,20 @@ package Client {
     - static executionStep() : void
     }
 
+    class RequestBuilder {
+    --Methods--
+    + static createNewRequest() : RequestBuilder
+    + setRequestType(Request.RequestType requestType) : RequestBuilder
+    + setCheckingIndex(Integer checkingIndex) : RequestBuilder
+    + setCommandName(String commandName) : RequestBuilder
+    + build() : Request
+    + static setUserProfile(UserProfile userProfile) : void
+    + static getUserProfile() : UserProfile
+    }
+
     class RequestImpl {
     --Methods--
     * (implemented from Request)
-    }
-
-    class RequestBuilder {
-    --Methods--
-    + static createNewRequest(RequestType requestType) : Request
-    + static createNewRequest(RequestType requestType, Integer checkingIndex) : Request
-    + static createNewRequest(RequestType requestType, String commandName) : Request
-    + static setUserProfile(UserProfile userProfile) : void
-    + static getUserProfile() : UserProfile
     }
 
     package File {
