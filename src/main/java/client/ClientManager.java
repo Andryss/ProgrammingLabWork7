@@ -137,6 +137,7 @@ public class ClientManager {
     private void executionStep() {
         ClientController.getInstance().initialize();
 
+        //noinspection InfiniteLoopStatement
         while (true) {
             try {
                 ClientExecutor.getInstance().parseCommand(ClientController.getInstance().readLine());
