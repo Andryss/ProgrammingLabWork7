@@ -11,24 +11,29 @@ import java.util.concurrent.locks.ReentrantLock;
  * ServerCollectionManager is the main class which working with database and collections
  */
 public class ServerCollectionManager {
-    private static Connection connection;
-    private static Hashtable<Integer, Movie> movieCollection;
-    private static int collectionElementsLimit;
-    private static int userElementsLimit;
-    private static Hashtable<String, UserProfile> userCollection;
-    private static final ReentrantLock readWriteLock = new ReentrantLock();
+    private static final ServerCollectionManager instance = new ServerCollectionManager(); // Follow "Singleton" pattern
+    private Connection connection;
+    private Hashtable<Integer, Movie> movieCollection;
+    private int collectionElementsLimit;
+    private int userElementsLimit;
+    private Hashtable<String, UserProfile> userCollection;
+    private final ReentrantLock readWriteLock = new ReentrantLock();
 
     private ServerCollectionManager() {}
 
-    private static String dbHostName;
-    private static String dbName;
-    private static String dbUser;
-    private static String dbPassword;
+    static ServerCollectionManager getInstance() {
+        return instance;
+    }
 
-    private static final String usersTable = "users_335155";
-    private static final String movieTable = "movie_335155";
+    private String dbHostName;
+    private String dbName;
+    private String dbUser;
+    private String dbPassword;
 
-    static void initialize() throws ClassNotFoundException, SQLException, FieldException {
+    private final String usersTable = "users_335155";
+    private final String movieTable = "movie_335155";
+
+    void initialize() throws ClassNotFoundException, SQLException, FieldException {
         Class.forName("org.postgresql.Driver");
         try {
             connection = DriverManager.getConnection(String.format("jdbc:postgresql://%s/%s", dbHostName, dbName), dbUser, dbPassword);
@@ -41,7 +46,7 @@ public class ServerCollectionManager {
         printTables();
     }
 
-    static void setProperties(Properties properties) {
+    void setProperties(Properties properties) {
         dbHostName = properties.getProperty("dbHostName", "pg");
         dbName = properties.getProperty("dbName", "studs");
         dbUser = properties.getProperty("dbUser");
@@ -70,16 +75,16 @@ public class ServerCollectionManager {
         }
     }
 
-    private static Statement statement;
-    private static PreparedStatement getUserStatement;
-    private static PreparedStatement insertUserStatement;
-    private static PreparedStatement removeUserStatement;
-    private static PreparedStatement insertMovieStatement;
-    private static PreparedStatement updateMovieStatement;
-    private static PreparedStatement removeMovieStatement;
-    private static PreparedStatement removeAllMoviesStatement;
+    private Statement statement;
+    private PreparedStatement getUserStatement;
+    private PreparedStatement insertUserStatement;
+    private PreparedStatement removeUserStatement;
+    private PreparedStatement insertMovieStatement;
+    private PreparedStatement updateMovieStatement;
+    private PreparedStatement removeMovieStatement;
+    private PreparedStatement removeAllMoviesStatement;
 
-    private static void initializeStatements() throws SQLException {
+    private void initializeStatements() throws SQLException {
         statement = connection.createStatement();
         getUserStatement = connection.prepareStatement(String.format("SELECT * FROM %s WHERE user_login=?", usersTable));
         insertUserStatement = connection.prepareStatement(String.format("INSERT INTO %s (" +
@@ -120,7 +125,7 @@ public class ServerCollectionManager {
         removeAllMoviesStatement = connection.prepareStatement(String.format("DELETE FROM %s WHERE user_id=?", movieTable));
     }
 
-    static void createTables() throws SQLException {
+    void createTables() throws SQLException {
         statement.execute(String.format("CREATE TABLE IF NOT EXISTS %s (\n" +
                 "user_id BIGSERIAL,\n" +
                 "user_login TEXT PRIMARY KEY,\n" +
@@ -144,7 +149,7 @@ public class ServerCollectionManager {
                 ")", movieTable));
     }
 
-    static void close() {
+    void close() {
         try {
             connection.close();
         } catch (Throwable e) {
@@ -152,34 +157,34 @@ public class ServerCollectionManager {
         }
     }
 
-    static void dropTables() {
+    void dropTables() {
         try {
             statement.execute(String.format("DROP TABLE %s", usersTable));
             statement.execute(String.format("DROP TABLE %s", movieTable));
         } catch (SQLException e) {
-            ServerController.error(e.getMessage());
+            ServerController.getInstance().error(e.getMessage());
         }
     }
 
-    public static long getUserID(String userName) {
+    public long getUserID(String userName) {
         return userCollection.get(userName) == null ? -1 : userCollection.get(userName).getId();
     }
 
-    public static long getUserID(UserProfile user) {
+    public long getUserID(UserProfile user) {
         UserProfile userProfile = userCollection.get(user.getName());
         return (userProfile != null && userProfile.getPassword().equals(user.getPassword()) ? userProfile.getId() : -1);
     }
 
-    public static boolean isUserPresented(UserProfile userProfile) {
+    public boolean isUserPresented(UserProfile userProfile) {
         return getUserID(userProfile) != -1;
     }
 
-    public static String getUserName(long id) {
+    public String getUserName(long id) {
         Optional<Map.Entry<String,UserProfile>> user = userCollection.entrySet().stream().filter(e -> e.getValue().getId() == id).findAny();
         return user.map(Map.Entry::getKey).orElse(null);
     }
 
-    public static long registerUser(UserProfile userProfile) {
+    public long registerUser(UserProfile userProfile) {
         if (getUserID(userProfile) == -1) {
             readWriteLock.lock();
             try {
@@ -196,7 +201,7 @@ public class ServerCollectionManager {
                     }
                 }
             } catch (SQLException e) {
-                ServerController.error(e.getMessage());
+                ServerController.getInstance().error(e.getMessage());
             } finally {
                 readWriteLock.unlock();
             }
@@ -204,7 +209,7 @@ public class ServerCollectionManager {
         return -1;
     }
 
-    public static UserProfile removeUser(UserProfile userProfile) {
+    public UserProfile removeUser(UserProfile userProfile) {
         readWriteLock.lock();
         try {
             if (!userCollection.get(userProfile.getName()).getPassword().equals(userProfile.getPassword())) {
@@ -214,39 +219,39 @@ public class ServerCollectionManager {
             removeUserStatement.executeUpdate();
             return userCollection.remove(userProfile.getName());
         } catch (SQLException e) {
-            ServerController.error(e.getMessage());
+            ServerController.getInstance().error(e.getMessage());
             return null;
         } finally {
             readWriteLock.unlock();
         }
     }
 
-    static void removeUser(String userName) {
+    void removeUser(String userName) {
         readWriteLock.lock();
         try {
             removeUserStatement.setString(1, userName);
             removeUserStatement.executeUpdate();
             userCollection.remove(userName);
         } catch (SQLException e) {
-            ServerController.error(e.getMessage());
+            ServerController.getInstance().error(e.getMessage());
         } finally {
             readWriteLock.unlock();
         }
     }
 
-    public static Movie getMovie(Integer key) {
+    public Movie getMovie(Integer key) {
         // return movieCollection.get(key).clone();
         return movieCollection.get(key);
     }
 
-    static long countElements(String userName) {
+    long countElements(String userName) {
         return getMovieCollection()
                 .values().stream()
                 .filter(m -> m.getOwner().equals(userName))
                 .count();
     }
 
-    public static Movie putMovie(Integer key, Movie movie, UserProfile userProfile) throws IllegalAccessException {
+    public Movie putMovie(Integer key, Movie movie, UserProfile userProfile) throws IllegalAccessException {
         long userID = getUserID(userProfile);
         if (userID == -1) {
             throw new IllegalAccessException("User with name \"" + userProfile.getName() + "\" doesn't exist");
@@ -281,14 +286,14 @@ public class ServerCollectionManager {
             movie.setOwner(userProfile.getName());
             return movieCollection.put(key, movie);
         } catch (SQLException e) {
-            ServerController.error(e.getMessage());
+            ServerController.getInstance().error(e.getMessage());
             return null;
         } finally {
             readWriteLock.unlock();
         }
     }
 
-    private static void checkPermission(Integer key, UserProfile userProfile) throws IllegalAccessException {
+    private void checkPermission(Integer key, UserProfile userProfile) throws IllegalAccessException {
         if (!isUserPresented(userProfile)) {
             throw new IllegalAccessException("Current user doesn't exist");
         }
@@ -301,7 +306,7 @@ public class ServerCollectionManager {
         }
     }
 
-    public static Movie updateMovie(Integer key, Movie movie, UserProfile userProfile) throws IllegalAccessException {
+    public Movie updateMovie(Integer key, Movie movie, UserProfile userProfile) throws IllegalAccessException {
         checkPermission(key, userProfile);
         readWriteLock.lock();
         try {
@@ -324,14 +329,14 @@ public class ServerCollectionManager {
             movie.setOwner(movieCollection.get(key).getOwner());
             return movieCollection.put(key, movie);
         } catch (SQLException e) {
-            ServerController.error(e.getMessage());
+            ServerController.getInstance().error(e.getMessage());
             return null;
         } finally {
             readWriteLock.unlock();
         }
     }
 
-    public static Movie removeMovie(Integer key, UserProfile userProfile) throws IllegalAccessException {
+    public Movie removeMovie(Integer key, UserProfile userProfile) throws IllegalAccessException {
         checkPermission(key, userProfile);
         readWriteLock.lock();
         try {
@@ -339,27 +344,27 @@ public class ServerCollectionManager {
             removeMovieStatement.executeUpdate();
             return movieCollection.remove(key);
         } catch (SQLException e) {
-            ServerController.error(e.getMessage());
+            ServerController.getInstance().error(e.getMessage());
             return null;
         } finally {
             readWriteLock.unlock();
         }
     }
 
-    static void removeMovie(Integer key) {
+    void removeMovie(Integer key) {
         readWriteLock.lock();
         try {
             removeMovieStatement.setInt(1, key);
             removeMovieStatement.executeUpdate();
             movieCollection.remove(key);
         } catch (SQLException e) {
-            ServerController.error(e.getMessage());
+            ServerController.getInstance().error(e.getMessage());
         } finally {
             readWriteLock.unlock();
         }
     }
 
-    public static void removeAllMovies(UserProfile userProfile) throws IllegalAccessException {
+    public void removeAllMovies(UserProfile userProfile) throws IllegalAccessException {
         long id = getUserID(userProfile);
         if (id == -1) {
             throw new IllegalAccessException("Current user doesn't exist");
@@ -375,25 +380,25 @@ public class ServerCollectionManager {
                     .map(Map.Entry::getKey)
                     .forEach(movieCollection::remove);
         } catch (SQLException e) {
-            ServerController.error(e.getMessage());
+            ServerController.getInstance().error(e.getMessage());
         } finally {
             readWriteLock.unlock();
         }
     }
 
-    static void removeAllMovies() {
+    void removeAllMovies() {
         readWriteLock.lock();
         try {
             statement.executeQuery(String.format("DELETE FROM %s", movieTable));
         } catch (SQLException e) {
-            ServerController.error(e.getMessage());
+            ServerController.getInstance().error(e.getMessage());
         } finally {
             readWriteLock.unlock();
         }
         movieCollection.clear();
     }
 
-    static void loadCollectionsFromDB() throws SQLException, FieldException {
+    void loadCollectionsFromDB() throws SQLException, FieldException {
         ResultSet usersResultSet = statement.executeQuery(String.format("SELECT * FROM %s", usersTable));
         userCollection = new Hashtable<>();
         while (usersResultSet.next()) {
@@ -409,7 +414,7 @@ public class ServerCollectionManager {
         }
     }
 
-    private static Map.Entry<String,UserProfile> parseUser(ResultSet resultSet) throws SQLException {
+    private Map.Entry<String,UserProfile> parseUser(ResultSet resultSet) throws SQLException {
         return new AbstractMap.SimpleEntry<>(
                 resultSet.getString("user_login"),
                 new UserProfile(
@@ -420,7 +425,7 @@ public class ServerCollectionManager {
         );
     }
 
-    private static Map.Entry<Integer,Movie> parseMovie(ResultSet resultSet) throws SQLException, FieldException {
+    private Map.Entry<Integer,Movie> parseMovie(ResultSet resultSet) throws SQLException, FieldException {
         Coordinates coordinates = new Coordinates();
         coordinates.setX(String.valueOf(resultSet.getLong("coordinates_x")));
         coordinates.setY(String.valueOf(resultSet.getLong("coordinates_y")));
@@ -448,21 +453,21 @@ public class ServerCollectionManager {
         return new AbstractMap.SimpleEntry<>(key,movie);
     }
 
-    public static Hashtable<Integer,Movie> getMovieCollection() {
+    public Hashtable<Integer,Movie> getMovieCollection() {
         @SuppressWarnings("unchecked")
         Hashtable<Integer,Movie> hashtable = (Hashtable<Integer,Movie>) movieCollection.clone();
         return hashtable;
     }
 
-    public static int getCollectionElementsLimit() {
+    public int getCollectionElementsLimit() {
         return collectionElementsLimit;
     }
-    public static int getUserElementsLimit() {
+    public int getUserElementsLimit() {
         return userElementsLimit;
     }
 
-    static void printTables() {
-        ServerController.info("Users: " + userCollection.toString());
-        ServerController.info("Movies: " + movieCollection.toString());
+    void printTables() {
+        ServerController.getInstance().info("Users: " + userCollection.toString());
+        ServerController.getInstance().info("Movies: " + movieCollection.toString());
     }
 }

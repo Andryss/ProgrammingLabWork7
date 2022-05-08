@@ -20,18 +20,18 @@ public class ClientMain {
             }
             properties.load(new FileReader(props));
         } catch (FileNotFoundException e) {
-            ClientController.printlnErr("File \"client.properties\" with properties not found");
+            ClientController.getInstance().printlnErr("File \"client.properties\" with properties not found");
             return;
         } catch (IOException e) {
-            ClientController.printlnErr(e.getMessage());
+            ClientController.getInstance().printlnErr(e.getMessage());
             return;
         }
 
 
         try {
-            ClientManager.run(properties);
+            ClientManager.getInstance().run(properties);
         } catch (Throwable e) {
-            ClientController.printlnErr(e.getMessage());
+            ClientController.getInstance().printlnErr(e.getMessage());
         }
     }
 

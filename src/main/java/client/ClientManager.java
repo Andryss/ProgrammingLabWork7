@@ -24,79 +24,86 @@ import java.util.Properties;
  * <p>4) Print Server response</p>
  */
 public class ClientManager {
+    private static final ClientManager instance = new ClientManager();
 
-    public static void run(Properties properties) throws IOException, ClassNotFoundException, CommandException {
+    private ClientManager() {}
+
+    public static ClientManager getInstance() {
+        return instance;
+    }
+
+    public void run(Properties properties) throws IOException, ClassNotFoundException, CommandException {
         try {
             initializationStep(properties);
             connectionStep();
             loginRegisterStep();
             executionStep();
         } catch (NoSuchElementException e) {
-            ClientController.printlnErr("Incorrect input (EOF). Try not to be so unpredictable!");
+            ClientController.getInstance().printlnErr("Incorrect input (EOF). Try not to be so unpredictable!");
         }
     }
 
-    private static void initializationStep(Properties properties) throws IOException, CommandException, NumberFormatException {
-        ClientConnector.setProperties(properties);
-        ClientExecutor.initialize();
+    private void initializationStep(Properties properties) throws IOException, CommandException, NumberFormatException {
+        ClientConnector.getInstance().setProperties(properties);
+        ClientExecutor.getInstance().initialize();
     }
 
-    private static void connectionStep() throws IOException, ClassNotFoundException {
-        ClientConnector.initialize();
+    private void connectionStep() throws IOException, ClassNotFoundException {
+        ClientConnector.getInstance().initialize();
     }
 
-    private static void loginRegisterStep() {
+    private void loginRegisterStep() {
         loginRegisterStep:
         while (true) {
-            ClientController.print("Do you want (\"l[ogin]\" or \"r[egister]\"): ");
-            String line = ClientController.readLine().trim();
+            ClientController.getInstance().print("Do you want (\"l[ogin]\" or \"r[egister]\"): ");
+            String line = ClientController.getInstance().readLine().trim();
             switch (line) {
                 case "exit":
                     System.exit(0);
                 case "login":
                 case "l":
                     if (loginStep()) {
-                        ClientController.printlnGood("User successfully logged in");
+                        ClientController.getInstance().printlnGood("User successfully logged in");
                         break loginRegisterStep;
                     }
                     break;
                 case "register":
                 case "r":
                     if (registerStep()) {
-                        ClientController.printlnGood("New user successfully registered");
+                        ClientController.getInstance().printlnGood("New user successfully registered");
                         break loginRegisterStep;
                     }
                     break;
                 default:
-                    ClientController.printlnErr("Unknown command \"" + line + "\"");
+                    ClientController.getInstance().printlnErr("Unknown command \"" + line + "\"");
                     break;
             }
         }
     }
 
-    private static boolean loginStep() {
+    private boolean loginStep() {
         return lrstep(Request.RequestType.LOGIN_USER, Response.ResponseType.LOGIN_SUCCESSFUL, Response.ResponseType.LOGIN_FAILED);
     }
 
-    private static boolean registerStep() {
+    private boolean registerStep() {
         return lrstep(Request.RequestType.REGISTER_USER, Response.ResponseType.REGISTER_SUCCESSFUL, Response.ResponseType.REGISTER_FAILED);
     }
 
-    private static boolean lrstep(Request.RequestType requestType, Response.ResponseType responseTypeSuccess, Response.ResponseType responseTypeFail) {
+    private boolean lrstep(Request.RequestType requestType, Response.ResponseType responseTypeSuccess, Response.ResponseType responseTypeFail) {
         UserProfile userProfile;
         try {
-            userProfile = new UserProfile(ClientController.readLogin(),ClientController.readPassword());
+            userProfile = new UserProfile(ClientController.getInstance().readLogin(),ClientController.getInstance().readPassword());
         } catch (IllegalArgumentException e) {
-            ClientController.printlnErr(e.getMessage());
+            ClientController.getInstance().printlnErr(e.getMessage());
             return false;
         }
         RequestBuilder.setUserProfile(userProfile);
         try {
-            Response response = ClientConnector.sendToServer(
+            Response response = ClientConnector.getInstance().sendToServer(
                     RequestBuilder.createNewRequest().setRequestType(requestType).build()
             );
             if (response.getResponseType() == responseTypeFail) {
-                ClientController.printlnErr(response.getMessage());
+                ClientController.getInstance().printlnErr(response.getMessage());
             } else if (response.getResponseType() == responseTypeSuccess) {
                 addLogoutHook();
                 return true;
@@ -110,15 +117,15 @@ public class ClientManager {
                         "\"");
             }
         } catch (IOException | ClassNotFoundException e) {
-            ClientController.printlnErr(e.getMessage());
+            ClientController.getInstance().printlnErr(e.getMessage());
         }
         return false;
     }
 
-    private static void addLogoutHook() {
+    private void addLogoutHook() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
-                ClientConnector.sendRequest(
+                ClientConnector.getInstance().sendRequest(
                         RequestBuilder.createNewRequest().setRequestType(Request.RequestType.LOGOUT_USER).build()
                 );
             } catch (IOException e) {
@@ -127,19 +134,19 @@ public class ClientManager {
         }));
     }
 
-    private static void executionStep() {
-        ClientController.initialize();
+    private void executionStep() {
+        ClientController.getInstance().initialize();
 
         while (true) {
             try {
-                ClientExecutor.parseCommand(ClientController.readLine());
-                Response response = ClientConnector.sendToServer(ClientExecutor.getRequest());
+                ClientExecutor.getInstance().parseCommand(ClientController.getInstance().readLine());
+                Response response = ClientConnector.getInstance().sendToServer(ClientExecutor.getInstance().getRequest());
                 if (response.getResponseType() == Response.ResponseType.EXECUTION_SUCCESSFUL) {
-                    ClientController.println(response.getMessage());
+                    ClientController.getInstance().println(response.getMessage());
                 } else if (response.getResponseType() == Response.ResponseType.EXECUTION_FAILED) {
-                    ClientController.printlnErr(response.getMessage());
+                    ClientController.getInstance().printlnErr(response.getMessage());
                 } else {
-                    ClientController.printlnErr("Server has wrong logic: expected \"" +
+                    ClientController.getInstance().printlnErr("Server has wrong logic: expected \"" +
                             Response.ResponseType.EXECUTION_FAILED +
                             "\" or \"" +
                             Response.ResponseType.EXECUTION_SUCCESSFUL +
@@ -148,9 +155,9 @@ public class ClientManager {
                             "\"");
                 }
             } catch (SocketTimeoutException e) {
-                ClientController.printlnErr("Server isn't responding (try again later)");
+                ClientController.getInstance().printlnErr("Server isn't responding (try again later)");
             } catch (IOException | ClassNotFoundException | CommandException e) {
-                ClientController.printlnErr(e.getMessage());
+                ClientController.getInstance().printlnErr(e.getMessage());
             }
         }
     }

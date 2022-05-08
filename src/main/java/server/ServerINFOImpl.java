@@ -24,37 +24,37 @@ public class ServerINFOImpl implements ServerINFO {
 
     @Override
     public Movie getMovie(Integer key) {
-        return ServerCollectionManager.getMovie(key);
+        return ServerCollectionManager.getInstance().getMovie(key);
     }
 
     @Override
     public Movie putMovie(Integer key, Movie movie) throws IllegalAccessException {
-        return ServerCollectionManager.putMovie(key, movie, userProfile);
+        return ServerCollectionManager.getInstance().putMovie(key, movie, userProfile);
     }
 
     @Override
     public Movie updateMovie(Integer key, Movie movie) throws IllegalAccessException {
-        return ServerCollectionManager.updateMovie(key, movie, userProfile);
+        return ServerCollectionManager.getInstance().updateMovie(key, movie, userProfile);
     }
 
     @Override
     public Movie removeMovie(Integer key) throws IllegalAccessException {
-        return ServerCollectionManager.removeMovie(key, userProfile);
+        return ServerCollectionManager.getInstance().removeMovie(key, userProfile);
     }
 
     @Override
     public void removeAllMovies() throws IllegalAccessException {
-        ServerCollectionManager.removeAllMovies(userProfile);
+        ServerCollectionManager.getInstance().removeAllMovies(userProfile);
     }
 
     @Override
     public Hashtable<Integer,Movie> getMovieCollection() {
-        return ServerCollectionManager.getMovieCollection();
+        return ServerCollectionManager.getInstance().getMovieCollection();
     }
 
     @Override
     public LinkedList<String> getUserHistory() {
-        return ServerHistoryManager.getUserHistory(userProfile);
+        return ServerHistoryManager.getInstance().getUserHistory(userProfile);
     }
 
     @Override
@@ -69,7 +69,7 @@ public class ServerINFOImpl implements ServerINFO {
 
 
     private static class ServerINFOClone extends ServerINFOImpl {
-        private final Hashtable<Integer, Movie> movieCollection = ServerCollectionManager.getMovieCollection();
+        private final Hashtable<Integer, Movie> movieCollection = ServerCollectionManager.getInstance().getMovieCollection();
 
         public ServerINFOClone(UserProfile userProfile) {
             super(userProfile, ResponseImpl.getEmptyResponse());
@@ -83,12 +83,12 @@ public class ServerINFOImpl implements ServerINFO {
         public Movie putMovie(Integer key, Movie movie) throws IllegalAccessException {
             if (movieCollection.containsKey(key)) {
                 throw new IllegalAccessException("Movie already exists");
-            } else if (movieCollection.size() >= ServerCollectionManager.getCollectionElementsLimit()) {
-                throw new IllegalAccessException("Collection limit (" + ServerCollectionManager.getCollectionElementsLimit() + ") exceeded");
+            } else if (movieCollection.size() >= ServerCollectionManager.getInstance().getCollectionElementsLimit()) {
+                throw new IllegalAccessException("Collection limit (" + ServerCollectionManager.getInstance().getCollectionElementsLimit() + ") exceeded");
             } else if (movieCollection.values().stream()
                     .filter(m -> m.getOwner().equals(userProfile.getName()))
-                    .count() >= ServerCollectionManager.getUserElementsLimit()) {
-                throw new IllegalAccessException(userProfile.getName() + "'s elements count limit (" + ServerCollectionManager.getUserElementsLimit() + ") exceeded");
+                    .count() >= ServerCollectionManager.getInstance().getUserElementsLimit()) {
+                throw new IllegalAccessException(userProfile.getName() + "'s elements count limit (" + ServerCollectionManager.getInstance().getUserElementsLimit() + ") exceeded");
             }
             movie.setOwner(userProfile.getName());
             return movieCollection.put(key, movie);

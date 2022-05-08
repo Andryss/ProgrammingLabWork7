@@ -15,21 +15,28 @@ import java.util.*;
  * <p>4) Make command build Request</p>
  */
 public class ClientExecutor {
-    private static final HashMap<String, Command> commandMap = new HashMap<>();
-    private static final ClientINFO clientINFO = new ClientINFOImpl();
-    private static Request request;
+    private static final ClientExecutor instance = new ClientExecutor();
+    private final HashMap<String, Command> commandMap = new HashMap<>();
+    private final ClientINFO clientINFO = new ClientINFOImpl();
+    private Request request;
 
-    static void initialize() throws IOException, CommandException {
+    private ClientExecutor() {}
+
+    public static ClientExecutor getInstance() {
+        return instance;
+    }
+
+    void initialize() throws IOException, CommandException {
         fillCommandMap();
     }
 
-    private static void fillCommandMap() throws IOException, CommandException {
+    private void fillCommandMap() throws IOException, CommandException {
 
         CommandFiller.fillCommandMap(commandMap);
 
     }
 
-    static void parseCommand(String inputLine) throws CommandException {
+    void parseCommand(String inputLine) throws CommandException {
         String[] operands = inputLine.trim().split("\\s+", 2);
         if (operands.length == 0) {
             throw new UndefinedCommandException("");
@@ -41,7 +48,7 @@ public class ClientExecutor {
         }
     }
 
-    private static void executeCommand(String commandName, String[] args) throws CommandException {
+    private void executeCommand(String commandName, String[] args) throws CommandException {
         Command command = commandMap.get(commandName);
         if (command == null) {
             throw new UndefinedCommandException(commandName);
@@ -54,10 +61,10 @@ public class ClientExecutor {
         command.buildRequest(request);
     }
 
-    public static HashMap<String,Command> getCommandMap() {
+    public HashMap<String,Command> getCommandMap() {
         return commandMap;
     }
-    public static Request getRequest() {
+    public Request getRequest() {
         return request;
     }
 }

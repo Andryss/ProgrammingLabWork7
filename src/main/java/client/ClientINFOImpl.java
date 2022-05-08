@@ -16,7 +16,7 @@ public class ClientINFOImpl implements ClientINFO {
 
     @Override
     public Response sendToServer(Request request) throws IOException, ClassNotFoundException {
-        return ClientConnector.sendToServer(request);
+        return ClientConnector.getInstance().sendToServer(request);
     }
 
     @Override
@@ -34,15 +34,15 @@ public class ClientINFOImpl implements ClientINFO {
 
     @Override
     public void println(String line) {
-        ClientController.println(line);
+        ClientController.getInstance().println(line);
     }
     @Override
     public void print(String line) {
-        ClientController.print(line);
+        ClientController.getInstance().print(line);
     }
     @Override
     public String nextLine() {
-        return ClientController.readLine();
+        return ClientController.getInstance().readLine();
     }
 
 

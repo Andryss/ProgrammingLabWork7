@@ -46,7 +46,7 @@ public class ServerExecutor {
     }
 
     void executeRequest() {
-        ServerController.info("Request starts executing");
+        ServerController.getInstance().info("Request starts executing");
 
         try {
             if (request.getRequestType() == Request.RequestType.CHECK_CONNECTION) {
@@ -62,20 +62,20 @@ public class ServerExecutor {
             } else if (request.getRequestType() == Request.RequestType.EXECUTE_COMMAND) {
                 executeCommandRequest();
             } else {
-                ServerController.info("Unexpected request type: " + request.getRequestType());
+                ServerController.getInstance().info("Unexpected request type: " + request.getRequestType());
             }
         } catch (NullPointerException e) {
             Response response = ResponseBuilder.createNewResponse()
                     .setResponseType(Response.ResponseType.WRONG_REQUEST_FORMAT)
                     .addMessage("Wrong request format")
                     .build();
-            new Thread(() -> new ServerConnector().sendToClient(client, response), "SendingWFThread").start();
+            new Thread(() -> ServerConnector.getInstance().sendToClient(client, response), "SendingWFThread").start();
         }
 
-        ServerController.info("Request executed");
+        ServerController.getInstance().info("Request executed");
 
         printUsers();
-        ServerCollectionManager.printTables();
+        ServerCollectionManager.getInstance().printTables();
     }
 
     private void checkConnectionRequest() {
@@ -85,7 +85,7 @@ public class ServerExecutor {
                     .setResponseType(Response.ResponseType.CONNECTION_SUCCESSFUL)
                     .addMessage("Connection with server was successful")
                     .build();
-            new Thread(() -> new ServerConnector().sendToClient(client, response), "SendingCCThread").start();
+            new Thread(() -> ServerConnector.getInstance().sendToClient(client, response), "SendingCCThread").start();
         } catch (InterruptedException e) {
             // ignore
         }
@@ -93,7 +93,7 @@ public class ServerExecutor {
 
     private void loginUserRequest() {
         Response response;
-        if (ServerCollectionManager.isUserPresented(request.getUserProfile())) {
+        if (ServerCollectionManager.getInstance().isUserPresented(request.getUserProfile())) {
             if (authorizedUsers.contains(request.getUserProfile())) {
                 response = ResponseBuilder.createNewResponse()
                         .setResponseType(Response.ResponseType.LOGIN_FAILED)
@@ -105,7 +105,7 @@ public class ServerExecutor {
                         .setResponseType(Response.ResponseType.LOGIN_SUCCESSFUL)
                         .addMessage("User successfully logged in")
                         .build();
-                ServerHistoryManager.updateUser(request.getUserProfile());
+                ServerHistoryManager.getInstance().updateUser(request.getUserProfile());
             }
         } else {
             response = ResponseBuilder.createNewResponse()
@@ -113,19 +113,19 @@ public class ServerExecutor {
                     .addMessage("Incorrect login or password")
                     .build();
         }
-        new Thread(() -> new ServerConnector().sendToClient(client, response), "SendingLUThread").start();
+        new Thread(() -> ServerConnector.getInstance().sendToClient(client, response), "SendingLUThread").start();
     }
 
     private void logoutUserRequest() {
         authorizedUsers.remove(request.getUserProfile());
-        ServerHistoryManager.deleteUser(request.getUserProfile());
+        ServerHistoryManager.getInstance().deleteUser(request.getUserProfile());
     }
 
     static void logoutUser(String userName) {
         authorizedUsers.stream().filter(u -> u.getName().equals(userName))
                 .forEach(u -> {
                     authorizedUsers.remove(u);
-                    ServerHistoryManager.deleteUser(u);
+                    ServerHistoryManager.getInstance().deleteUser(u);
                 });
     }
 
@@ -137,12 +137,12 @@ public class ServerExecutor {
                     .addMessage("User isn't logged in yet (or connection support time is out)")
                     .build();
         } else {
-            Movie movie = ServerCollectionManager.getMovie(request.getCheckingIndex());
+            Movie movie = ServerCollectionManager.getInstance().getMovie(request.getCheckingIndex());
             if (movie == null) {
-                if (ServerCollectionManager.countElements(request.getUserProfile().getName()) >= ServerCollectionManager.getUserElementsLimit()) {
+                if (ServerCollectionManager.getInstance().countElements(request.getUserProfile().getName()) >= ServerCollectionManager.getInstance().getUserElementsLimit()) {
                     response = ResponseBuilder.createNewResponse()
                             .setResponseType(Response.ResponseType.USER_LIMIT_EXCEEDED)
-                            .addMessage("Your elements count limit (" + ServerCollectionManager.getUserElementsLimit() + ") exceeded")
+                            .addMessage("Your elements count limit (" + ServerCollectionManager.getInstance().getUserElementsLimit() + ") exceeded")
                             .build();
                 } else {
                     response = ResponseBuilder.createNewResponse()
@@ -163,14 +163,14 @@ public class ServerExecutor {
                             .build();
                 }
             }
-            ServerHistoryManager.updateUser(request.getUserProfile());
+            ServerHistoryManager.getInstance().updateUser(request.getUserProfile());
         }
-        new Thread(() -> new ServerConnector().sendToClient(client, response), "SendingCEThread").start();
+        new Thread(() -> ServerConnector.getInstance().sendToClient(client, response), "SendingCEThread").start();
     }
 
     private void registerUserRequest() {
         Response response;
-        long newUserID = ServerCollectionManager.registerUser(request.getUserProfile());
+        long newUserID = ServerCollectionManager.getInstance().registerUser(request.getUserProfile());
         if (newUserID == -1) {
             response = ResponseBuilder.createNewResponse()
                     .setResponseType(Response.ResponseType.REGISTER_FAILED)
@@ -182,9 +182,9 @@ public class ServerExecutor {
                     .setResponseType(Response.ResponseType.REGISTER_SUCCESSFUL)
                     .addMessage("New user successfully registered")
                     .build();
-            ServerHistoryManager.updateUser(request.getUserProfile());
+            ServerHistoryManager.getInstance().updateUser(request.getUserProfile());
         }
-        new Thread(() -> new ServerConnector().sendToClient(client, response), "SendingRUThread").start();
+        new Thread(() -> ServerConnector.getInstance().sendToClient(client, response), "SendingRUThread").start();
     }
 
     private void executeCommandRequest() {
@@ -198,7 +198,7 @@ public class ServerExecutor {
             response = ResponseBuilder.createNewResponse()
                     .setResponseType(Response.ResponseType.EXECUTION_SUCCESSFUL)
                     .build();
-            ServerHistoryManager.updateUser(request.getUserProfile());
+            ServerHistoryManager.getInstance().updateUser(request.getUserProfile());
             serverINFO = new ServerINFOImpl(request.getUserProfile(), response);
 
             Queue<Command> commandQueue = request.getCommandQueue();
@@ -211,7 +211,7 @@ public class ServerExecutor {
                     command.execute(serverINFO);
                 }
                 response.addMessage("\u001B[32m" + "SUCCESS: command \"" + request.getCommandName() + "\" successfully completed" + "\u001B[0m");
-                ServerHistoryManager.addUserHistory(request.getUserProfile(), request.getCommandName());
+                ServerHistoryManager.getInstance().addUserHistory(request.getUserProfile(), request.getCommandName());
             } catch (CommandException e) {
                 response = ResponseBuilder.createNewResponse()
                         .setResponseType(Response.ResponseType.EXECUTION_FAILED)
@@ -220,7 +220,7 @@ public class ServerExecutor {
             }
         }
         Response finalResponse = response;
-        new Thread(() -> new ServerConnector().sendToClient(client, finalResponse), "SendingECThread").start();
+        new Thread(() -> ServerConnector.getInstance().sendToClient(client, finalResponse), "SendingECThread").start();
     }
 
     private void validateCommands() throws CommandException {
@@ -236,7 +236,7 @@ public class ServerExecutor {
     }
 
     static void printUsers() {
-        ServerController.info("Authorized users: " + authorizedUsers);
+        ServerController.getInstance().info("Authorized users: " + authorizedUsers);
     }
 
     public static ExecutorService getService() {

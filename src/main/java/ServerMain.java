@@ -22,21 +22,21 @@ public class ServerMain {
             }
             properties.load(new FileReader(props));
         } catch (FileNotFoundException e) {
-            ClientController.printlnErr("File \"server.properties\" with properties not found");
+            ClientController.getInstance().printlnErr("File \"server.properties\" with properties not found");
             return;
         } catch (IOException e) {
-            ClientController.printlnErr(e.getMessage());
+            ClientController.getInstance().printlnErr(e.getMessage());
             return;
         }
 
 
         try {
-            ServerManager.run(properties);
+            ServerManager.getInstance().run(properties);
         } catch (FieldException e) {
-            ServerController.error("Problems with Movie File: " + e.getMessage());
+            ServerController.getInstance().error("Problems with Movie File: " + e.getMessage());
             System.exit(0);
         } catch (Throwable e) {
-            ServerController.error(e.getMessage());
+            ServerController.getInstance().error(e.getMessage());
             System.exit(0);
         }
     }

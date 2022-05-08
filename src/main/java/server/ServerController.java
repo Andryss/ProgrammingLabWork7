@@ -12,20 +12,24 @@ import java.util.Arrays;
  * ServerController logging into file and terminal, implements simple console commands for server
  */
 public class ServerController {
-
-    private static final Logger logger = LogManager.getLogger();
+    private static final ServerController instance = new ServerController();
+    private final Logger logger = LogManager.getLogger();
 
     private ServerController() {}
 
-    public static void info(String message) {
+    public static ServerController getInstance() {
+        return instance;
+    }
+
+    public void info(String message) {
         logger.info(message);
     }
 
-    public static void error(String message) {
+    public void error(String message) {
         logger.error("\u001B[31m" + message + "\u001B[0m");
     }
 
-    public static void run() {
+    public void run() {
         info("Ready for commands (type \"?\" or \"help\" for list of commands)");
 
         while (true) {
@@ -59,24 +63,24 @@ public class ServerController {
                     case "usb":
                     case "usban":
                         ServerExecutor.logoutUser(args[1]);
-                        ServerCollectionManager.removeUser(args[1]);
+                        ServerCollectionManager.getInstance().removeUser(args[1]);
                         break;
 
                     case "tbs":
                     case "tbshow":
                         ServerExecutor.printUsers();
-                        ServerCollectionManager.printTables();
+                        ServerCollectionManager.getInstance().printTables();
                         break;
 
                     case "usr":
                     case "usreg":
-                        ServerCollectionManager.registerUser(new UserProfile(args[1], args[2]));
+                        ServerCollectionManager.getInstance().registerUser(new UserProfile(args[1], args[2]));
                         break;
 
                     case "elr":
                     case "elremove":
                         try {
-                            ServerCollectionManager.removeMovie(Integer.parseInt(args[1]));
+                            ServerCollectionManager.getInstance().removeMovie(Integer.parseInt(args[1]));
                         } catch (NumberFormatException e) {
                             error(e.getMessage());
                         }
@@ -84,20 +88,20 @@ public class ServerController {
 
                     case "elc":
                     case "elclear":
-                        ServerCollectionManager.removeAllMovies();
+                        ServerCollectionManager.getInstance().removeAllMovies();
                         break;
 
                     case "usclh":
                     case "usclhistory":
-                        ServerHistoryManager.clearUserHistory(args[1]);
+                        ServerHistoryManager.getInstance().clearUserHistory(args[1]);
                         break;
 
                     case "tbdropcreate":
                         try {
                             ServerExecutor.getAuthorizedUsers().clear();
-                            ServerCollectionManager.dropTables();
-                            ServerCollectionManager.createTables();
-                            ServerCollectionManager.loadCollectionsFromDB();
+                            ServerCollectionManager.getInstance().dropTables();
+                            ServerCollectionManager.getInstance().createTables();
+                            ServerCollectionManager.getInstance().loadCollectionsFromDB();
                         } catch (SQLException | FieldException e) {
                             error(e.getMessage());
                         }

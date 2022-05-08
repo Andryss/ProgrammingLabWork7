@@ -14,22 +14,27 @@ import java.util.Properties;
  * <p>There are some methods to send and receive datagrams</p>
  */
 public class ClientConnector {
-    private static DatagramSocket socket;
-    private static InetAddress serverAddress;
-    private static int serverPort;
-    private static int socketSoTimeout;
-    private static final ByteBuffer dataBuffer = ByteBuffer.allocate(15_000);
+    private static final ClientConnector instance = new ClientConnector();
+    private DatagramSocket socket;
+    private InetAddress serverAddress;
+    private int serverPort;
+    private int socketSoTimeout;
+    private final ByteBuffer dataBuffer = ByteBuffer.allocate(15_000);
 
     private ClientConnector() {}
 
-    static void initialize() throws IOException, ClassNotFoundException {
-        ClientController.println("Connecting to server \"" + serverAddress + "\"");
-        setConnection();
-        checkConnection();
-        ClientController.printlnGood("Connection to server was successful");
+    static ClientConnector getInstance() {
+        return instance;
     }
 
-    static void setProperties(Properties properties) throws UnknownHostException, NumberFormatException {
+    void initialize() throws IOException, ClassNotFoundException {
+        ClientController.getInstance().println("Connecting to server \"" + serverAddress + "\"");
+        setConnection();
+        checkConnection();
+        ClientController.getInstance().printlnGood("Connection to server was successful");
+    }
+
+    void setProperties(Properties properties) throws UnknownHostException, NumberFormatException {
         serverAddress = InetAddress.getByName(properties.getProperty("serverAddress", "localhost"));
         try {
             serverPort = Integer.parseInt(properties.getProperty("serverPort", "52927"));
@@ -49,12 +54,12 @@ public class ClientConnector {
         }
     }
 
-    private static void setConnection() throws SocketException {
+    private void setConnection() throws SocketException {
         socket = new DatagramSocket();
         socket.setSoTimeout(socketSoTimeout);
     }
 
-    private static void checkConnection() throws IOException, ClassNotFoundException {
+    private void checkConnection() throws IOException, ClassNotFoundException {
         try {
             Response response = sendToServer(
                     RequestBuilder.createNewRequest().setRequestType(Request.RequestType.CHECK_CONNECTION).build()
@@ -71,7 +76,7 @@ public class ClientConnector {
         }
     }
 
-    public static Response sendToServer(Request request) throws IOException, ClassNotFoundException {
+    public Response sendToServer(Request request) throws IOException, ClassNotFoundException {
         try {
             sendRequest(request);
         } catch (IOException e) {
@@ -88,23 +93,23 @@ public class ClientConnector {
         }
     }
 
-    static void sendRequest(Request request) throws IOException {
+    void sendRequest(Request request) throws IOException {
         sendPacket(ConnectorHelper.objectToBuffer(request));
     }
 
-    private static void sendPacket(byte[] buf) throws IOException {
+    private void sendPacket(byte[] buf) throws IOException {
         DatagramPacket packetWithData = new DatagramPacket(buf, buf.length, serverAddress, serverPort);
         socket.send(packetWithData);
     }
 
-    private static Response acceptResponse() throws IOException, ClassNotFoundException {
+    private Response acceptResponse() throws IOException, ClassNotFoundException {
         receivePacket(dataBuffer.array());
         Response response = ConnectorHelper.objectFromBuffer(dataBuffer.array());
         dataBuffer.clear();
         return response;
     }
 
-    private static void receivePacket(byte[] buf) throws IOException {
+    private void receivePacket(byte[] buf) throws IOException {
         DatagramPacket packetWithData = new DatagramPacket(buf, buf.length);
         try {
             socket.receive(packetWithData);

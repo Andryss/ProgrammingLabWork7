@@ -1,8 +1,8 @@
 package client.file;
 
 import client.ClientExecutor;
-import general.ClientINFO;
 import client.ClientINFOImpl;
+import general.ClientINFO;
 import general.Request;
 import general.commands.*;
 import general.ServerINFO;
@@ -16,7 +16,7 @@ import java.util.NoSuchElementException;
  */
 public class FileExecutor {
     @SuppressWarnings("unchecked")
-    private final HashMap<String, Command> commandMap = (HashMap<String, Command>) ClientExecutor.getCommandMap().clone();
+    private final HashMap<String, Command> commandMap = (HashMap<String, Command>) ClientExecutor.getInstance().getCommandMap().clone();
     private final FileController controller;
     private final ClientINFO clientINFO;
     private final FileExecutor caller;
