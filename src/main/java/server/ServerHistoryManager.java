@@ -119,27 +119,30 @@ public class ServerHistoryManager {
     private void loadUserHistories() throws IllegalAccessException, IOException {
         try {
             File file = new File(historyFilename);
-            if (!file.createNewFile()) {
-                if (!file.isFile()) {
-                    throw new FileNotFoundException("Can't load histories, because file with name \"" + historyFilename + "\" can't be created");
-                }
-                if (!file.canRead()) {
-                    throw new IllegalAccessException("Can't load histories, because permission to read denied");
-                } else {
-                    try (XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(file)))) {
-                        decoder.setExceptionListener(e -> {
-                            throw new IllegalArgumentException("wrong format of \"" + historyFilename + "\" (" + e.getMessage() + ")");
-                        });
-                        @SuppressWarnings("unchecked")
-                        Hashtable<String, LinkedList<String>> hashtable = (Hashtable<String, LinkedList<String>>) decoder.readObject();
-                        userHistories = (hashtable == null) ? new Hashtable<>() : hashtable;
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        userHistories = new Hashtable<>();
-                    } catch (ClassCastException e) {
-                        throw new IllegalArgumentException("wrong user history object format");
-                    }
-                }
-            } else {
+            if (file.createNewFile()) {
+                userHistories = new Hashtable<>();
+                return;
+            }
+            if (!file.isFile()) {
+                throw new FileNotFoundException("Can't load histories, because file with name \"" + historyFilename + "\" can't be created");
+            }
+            if (!file.canRead()) {
+                throw new IllegalAccessException("Can't load histories, because permission to read denied");
+            }
+            FileInputStream stream = new FileInputStream(file);
+            if (stream.available() == 0) {
+                userHistories = new Hashtable<>();
+                stream.close();
+                return;
+            }
+            try (XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(stream))) {
+                decoder.setExceptionListener(e -> {
+                    throw new IllegalArgumentException("wrong format of \"" + historyFilename + "\" (" + e.getMessage() + ")");
+                });
+                @SuppressWarnings("unchecked")
+                Hashtable<String, LinkedList<String>> hashtable = (Hashtable<String, LinkedList<String>>) decoder.readObject();
+                userHistories = (hashtable == null) ? new Hashtable<>() : hashtable;
+            } catch (ArrayIndexOutOfBoundsException | ClassCastException e) {
                 userHistories = new Hashtable<>();
             }
         } catch (IOException | IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
