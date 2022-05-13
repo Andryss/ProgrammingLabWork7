@@ -5,9 +5,7 @@ import general.element.UserProfile;
 import general.Response;
 import general.ServerINFO;
 
-import java.util.Hashtable;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @see ServerINFO
@@ -115,10 +113,11 @@ public class ServerINFOImpl implements ServerINFO {
         }
         @Override
         public void removeAllMovies() {
+            ArrayList<Integer> movieToDelete = new ArrayList<>(movieCollection.size());
             movieCollection.entrySet().stream()
                     .filter(e -> e.getValue().getOwner().equals(userProfile.getName()))
-                    .map(Map.Entry::getKey)
-                    .forEach(movieCollection::remove);
+                    .forEach(e -> movieToDelete.add(e.getKey()));
+            movieToDelete.forEach(movieCollection::remove);
         }
         @Override
         public Hashtable<Integer, Movie> getMovieCollection() {

@@ -185,26 +185,27 @@ public class ServerCollectionManager {
     }
 
     public long registerUser(UserProfile userProfile) {
-        if (getUserID(userProfile) == -1) {
-            readWriteLock.lock();
-            try {
-                insertUserStatement.setString(1, userProfile.getName());
-                insertUserStatement.setString(2, userProfile.getPassword());
-                insertUserStatement.execute();
-
-                getUserStatement.setString(1, userProfile.getName());
-                try (ResultSet resultSet = getUserStatement.executeQuery()) {
-                    if (resultSet.next()) {
-                        long userID = resultSet.getLong("user_id");
-                        userCollection.put(userProfile.getName(), new UserProfile(userProfile.getName(), userProfile.getPassword(), userID));
-                        return userID;
-                    }
-                }
-            } catch (SQLException e) {
-                ServerController.getInstance().error(e.getMessage());
-            } finally {
-                readWriteLock.unlock();
+        readWriteLock.lock();
+        try {
+            if (getUserID(userProfile) != -1) {
+                return -1;
             }
+            insertUserStatement.setString(1, userProfile.getName());
+            insertUserStatement.setString(2, userProfile.getPassword());
+            insertUserStatement.execute();
+
+            getUserStatement.setString(1, userProfile.getName());
+            try (ResultSet resultSet = getUserStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    long userID = resultSet.getLong("user_id");
+                    userCollection.put(userProfile.getName(), new UserProfile(userProfile.getName(), userProfile.getPassword(), userID));
+                    return userID;
+                }
+            }
+        } catch (SQLException e) {
+            ServerController.getInstance().error(e.getMessage());
+        } finally {
+            readWriteLock.unlock();
         }
         return -1;
     }
@@ -252,20 +253,21 @@ public class ServerCollectionManager {
     }
 
     public Movie putMovie(Integer key, Movie movie, UserProfile userProfile) throws IllegalAccessException {
-        long userID = getUserID(userProfile);
-        if (userID == -1) {
-            throw new IllegalAccessException("User with name \"" + userProfile.getName() + "\" doesn't exist");
-        } else if (movieCollection.get(key) != null) {
-            throw new IllegalAccessException("Movie with key \"" + key + "\" already exists");
-        } else if (movieCollection.size() >= collectionElementsLimit) {
-            throw new IllegalAccessException("Collection limit (" + collectionElementsLimit + ") exceeded");
-        } else {
-            if (countElements(userProfile.getName()) >= userElementsLimit) {
-                throw new IllegalAccessException(userProfile.getName() + "'s elements count limit (" + userElementsLimit + ") exceeded");
-            }
-        }
         readWriteLock.lock();
         try {
+            long userID = getUserID(userProfile);
+            if (userID == -1) {
+                throw new IllegalAccessException("User with name \"" + userProfile.getName() + "\" doesn't exist");
+            } else if (movieCollection.get(key) != null) {
+                throw new IllegalAccessException("Movie with key \"" + key + "\" already exists");
+            } else if (movieCollection.size() >= collectionElementsLimit) {
+                throw new IllegalAccessException("Collection limit (" + collectionElementsLimit + ") exceeded");
+            } else {
+                if (countElements(userProfile.getName()) >= userElementsLimit) {
+                    throw new IllegalAccessException(userProfile.getName() + "'s elements count limit (" + userElementsLimit + ") exceeded");
+                }
+            }
+
             insertMovieStatement.setLong(1, userID);
             insertMovieStatement.setInt(2, key);
             insertMovieStatement.setString(3, movie.getName());
@@ -307,9 +309,10 @@ public class ServerCollectionManager {
     }
 
     public Movie updateMovie(Integer key, Movie movie, UserProfile userProfile) throws IllegalAccessException {
-        checkPermission(key, userProfile);
         readWriteLock.lock();
         try {
+            checkPermission(key, userProfile);
+
             updateMovieStatement.setString(1, movie.getName());
             updateMovieStatement.setFloat(2, movie.getCoordinates().getX());
             updateMovieStatement.setFloat(3, movie.getCoordinates().getY());
@@ -337,9 +340,10 @@ public class ServerCollectionManager {
     }
 
     public Movie removeMovie(Integer key, UserProfile userProfile) throws IllegalAccessException {
-        checkPermission(key, userProfile);
         readWriteLock.lock();
         try {
+            checkPermission(key, userProfile);
+
             removeMovieStatement.setInt(1, key);
             removeMovieStatement.executeUpdate();
             return movieCollection.remove(key);
@@ -365,12 +369,13 @@ public class ServerCollectionManager {
     }
 
     public void removeAllMovies(UserProfile userProfile) throws IllegalAccessException {
-        long id = getUserID(userProfile);
-        if (id == -1) {
-            throw new IllegalAccessException("Current user doesn't exist");
-        }
         readWriteLock.lock();
         try {
+            long id = getUserID(userProfile);
+            if (id == -1) {
+                throw new IllegalAccessException("Current user doesn't exist");
+            }
+
             removeAllMoviesStatement.setLong(1, id);
             removeAllMoviesStatement.executeUpdate();
             @SuppressWarnings("unchecked")

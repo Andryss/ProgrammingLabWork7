@@ -137,6 +137,34 @@ public class ClientManager {
     private void executionStep() {
         ClientController.getInstance().initialize();
 
+        // DDOS code :)
+//        try {
+//            ClientExecutor.getInstance().parseCommand("execute_script script");
+//            for (int i = 0; i < Runtime.getRuntime().availableProcessors() / 2; i++) {
+//                new Thread(() -> {
+//                    long start = System.currentTimeMillis();
+//                    for (int j = 0; j < 100_000; j++) {
+//                        try {
+//                            synchronized (ClientExecutor.getInstance()) {
+//                                ClientConnector.getInstance().sendRequest(ClientExecutor.getInstance().getRequest());
+//                            }
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                    System.out.println(System.currentTimeMillis() - start);
+//                }).start();
+//            }
+//        } catch (CommandException e) {
+//            e.printStackTrace();
+//        }
+//        try {
+//            Thread.sleep(20_000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        System.exit(0);
+
         //noinspection InfiniteLoopStatement
         while (true) {
             try {

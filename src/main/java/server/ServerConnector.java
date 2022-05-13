@@ -13,8 +13,8 @@ import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.*;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * ServerConnector receiving Request and starting Thread which executing this Request
@@ -96,21 +96,17 @@ public class ServerConnector {
      * Use ServerByteBufferManager to get available buffer. Can be created by ServerConnector only
      */
     private class ServerConnectorWorker {
-        final ByteBuffer dataBuffer = ServerByteBufferManager.getInstance().getAvailableBuffer(); // Follow "Singleton" pattern
+        final ByteBuffer dataBuffer = ServerByteBufferManager.getInstance().getAvailableBuffer();
 
         ServerConnectorWorker() {}
 
         void receiveRequest(SocketAddress client) {
             try {
-                if (dataBuffer == null) {
-                    ServerController.getInstance().error(Thread.currentThread().getName() + " waiting for available buffer (while receiving) doesn't complete");
-                } else {
-                    Request request = ConnectorHelper.objectFromBuffer(dataBuffer.array());
+                Request request = ConnectorHelper.objectFromBuffer(dataBuffer.array());
 
-                    ServerController.getInstance().info("Received " + dataBuffer.position() + " bytes buffer with request " + request);
+                ServerController.getInstance().info("Received " + dataBuffer.position() + " bytes buffer with request " + request);
 
-                    ServerExecutor.getService().submit(() -> new ServerExecutor(client, request).executeRequest());
-                }
+                ServerExecutor.getService().submit(() -> new ServerExecutor(client, request).executeRequest());
             } catch (Throwable e) {
                 ServerController.getInstance().error(e.getMessage());
             } finally {
@@ -120,16 +116,12 @@ public class ServerConnector {
 
         void sendToClient(SocketAddress client, Response response) {
             try {
-                if (dataBuffer == null) {
-                    ServerController.getInstance().error(Thread.currentThread().getName() + " waiting for available buffer (while sending) doesn't complete");
-                } else {
-                    dataBuffer.put(ConnectorHelper.objectToBuffer(response));
-                    dataBuffer.flip();
-                    ServerController.getInstance().info("Sending " + dataBuffer.limit() + " bytes to client " + client.toString() + " starts");
-                    channel.send(dataBuffer, client);
+                dataBuffer.put(ConnectorHelper.objectToBuffer(response));
+                dataBuffer.flip();
+                ServerController.getInstance().info("Sending " + dataBuffer.limit() + " bytes to client " + client.toString() + " starts");
+                channel.send(dataBuffer, client);
 
-                    ServerController.getInstance().info("Sending to client completed");
-                }
+                ServerController.getInstance().info("Sending to client completed");
             } catch (Throwable e) {
                 ServerController.getInstance().error(e.getMessage());
             } finally {
@@ -146,10 +138,7 @@ public class ServerConnector {
     private static class ServerByteBufferManager {
         private static final ServerByteBufferManager instance = new ServerByteBufferManager(); // Follow "Singleton" pattern
         private int byteBufferPoolSize;
-        private ArrayList<ByteBuffer> buffers; // Follow "Object pool" pattern
-        private LinkedList<Integer> availableBuffers;
-        private final ReentrantLock getBufferLock = new ReentrantLock();
-        private final Condition hasAvailableBuffers = getBufferLock.newCondition();
+        private BlockingQueue<ByteBuffer> buffers; // Follow "Object pool" pattern
 
         private ServerByteBufferManager() {}
 
@@ -158,11 +147,9 @@ public class ServerConnector {
         }
 
         void initialize() {
-            buffers = new ArrayList<>(byteBufferPoolSize);
-            availableBuffers = new LinkedList<>();
+            buffers = new LinkedBlockingQueue<>(byteBufferPoolSize);
             for (int i = 0; i < byteBufferPoolSize; i++) {
-                buffers.add(i, ByteBuffer.allocate(15_000));
-                availableBuffers.add(i);
+                buffers.add(ByteBuffer.allocate(15_000));
             }
         }
 
@@ -178,30 +165,16 @@ public class ServerConnector {
         }
 
         ByteBuffer getAvailableBuffer() {
-            getBufferLock.lock();
             try {
-                if (availableBuffers.isEmpty()) {
-                    hasAvailableBuffers.await();
-                }
-                return buffers.get(availableBuffers.removeFirst());
+                return buffers.take();
             } catch (InterruptedException e) {
-                return null;
-            } finally {
-                getBufferLock.unlock();
+                throw new RuntimeException(e);
             }
         }
 
         void returnBuffer(ByteBuffer buffer) {
-            getBufferLock.lock();
-            try {
-                if (buffers.contains(buffer)) {
-                    buffer.clear();
-                    availableBuffers.addFirst(buffers.indexOf(buffer));
-                    hasAvailableBuffers.signal();
-                }
-            } finally {
-                getBufferLock.unlock();
-            }
+            buffer.clear();
+            buffers.add(buffer);
         }
 
     }
